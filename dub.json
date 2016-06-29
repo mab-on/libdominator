@@ -1,0 +1,10 @@
+{
+	"name": "libdominator",
+	"authors": [
+		"Martin Brzenska"
+	],
+	"description": "A HTML Parser Library",
+	"copyright": "Copyright © 2016, Martin Brzenska",
+	"license": "MIT",
+	"targetType": "library"
+}
