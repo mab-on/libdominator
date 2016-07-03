@@ -174,12 +174,17 @@ Node[] filterDom(Node[] nodes , DomFilter[] expressions) {
     Node[] resultNodes;
     uint hit;
     foreach(Node node ; nodes) {
-        if(exp.followers && node.hasChildren() && exp.front.name == node.getTag() && exp.front.has(++hit) ) {
+        if(
+            exp.followers 
+            && node.hasChildren() 
+            && ( exp.front.name == node.getTag() || exp.front.name == "*" ) 
+            && exp.front.has(++hit) 
+        ) {
             DomFilter cExp = exp;
             cExp.popFront;
             resultNodes ~= filterDom(node.getChildren() , cExp);
         }
-        else if( !exp.followers && exp.front.name == node.getTag() ) {
+        else if( !exp.followers && (exp.front.name == node.getTag() || exp.front.name == "*" ) ) {
             if( exp.front.attribs.length ) {
                 foreach(Attribute attrib ; exp.front.attribs) {
                     if( attrib.matches(node) && exp.front.has(++hit)) {
