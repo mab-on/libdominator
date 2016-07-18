@@ -73,6 +73,7 @@ struct DomFilter {
             this.elements ~= tagElement;
         }
     }
+
     
     bool popFront() {
         if( 1 + this.i < this.elements.length ) {
@@ -106,6 +107,36 @@ struct DomFilter {
     
     bool empty() { return this.elements.length == 0; }
     
+    unittest {
+        DomFilter filter;
+        assert(filter.empty == true);
+        
+        filter = DomFilter("p");
+        assert(filter.elements == [TagElement(FilterPicktype.list, [], "p", [])]);
+        
+        filter = DomFilter("p[1,2]");
+        assert(filter.elements == [TagElement(FilterPicktype.list, [1, 2], "p", [])]);
+
+        filter = DomFilter("p[1..2]");
+        assert(filter.elements == [TagElement(FilterPicktype.range, [1, 2], "p", [])]);
+
+        filter = DomFilter("p[1]{class:MyClass}");
+        assert(filter.elements == [TagElement(FilterPicktype.list, [1], "p", [Attribute("class", ["MyClass"])])]);
+
+        filter = DomFilter("div.*.p[1..$]{class:MyClass}");
+        assert(filter.elements == [
+            TagElement(FilterPicktype.list, [], "div", []), 
+            TagElement(FilterPicktype.list, [], "*", []), 
+            TagElement(FilterPicktype.range, [1, 0], "p", [Attribute("class", ["MyClass"])])
+        ]);
+
+        filter = DomFilter("div.a{id:myID}.p[1..$]{class:MyClass}");
+        assert(filter.elements == [
+            TagElement(FilterPicktype.list, [], "div", []), 
+            TagElement(FilterPicktype.list, [], "a", [Attribute("id", ["myID"])]), 
+            TagElement(FilterPicktype.range, [1, 0], "p", [Attribute("class", ["MyClass"])])
+        ]);
+    }
 }
 
 struct TagElement
@@ -158,6 +189,26 @@ struct AttributeFilter {
             }
         }
     }
+    
+    unittest {
+        AttributeFilter attribFilter;
+
+        attribFilter = AttributeFilter("class:myClass,id:myID");
+        assert(attribFilter.attribs == [Attribute("class", ["myClass"]), Attribute("id", ["myID"])]);
+        
+        attribFilter = AttributeFilter("class:myClass");
+        assert(attribFilter.attribs == [Attribute("class", ["myClass"])]);
+
+        attribFilter = AttributeFilter("data-url:http://www.mab-on.net/");
+        assert(attribFilter.attribs == [Attribute("data-url", ["http://www.mab-on.net/"])]);
+    }
+}
+
+Node[] filterDom(Dominator dom , DomFilter expressions) {
+    return filterDom(dom,[expressions]);
+}
+Node[] filterDom(Dominator dom , DomFilter[] expressions) {
+    return dom.getNodes().filterDom(expressions);
 }
 
 Node[] filterDom(Node[] nodes , DomFilter[] expressions) {
@@ -170,9 +221,10 @@ Node[] filterDom(Node[] nodes , DomFilter[] expressions) {
 }
 
  Node[] filterDom(Node[] nodes , DomFilter exp) {
-     if(exp.empty) { return nodes; }
+    if(exp.empty) { return nodes; }
     Node[] resultNodes;
     uint hit;
+    bool attribMatch;
     foreach(Node node ; nodes) {
         if(
             exp.followers 
@@ -180,6 +232,17 @@ Node[] filterDom(Node[] nodes , DomFilter[] expressions) {
             && ( exp.front.name == node.getTag() || exp.front.name == "*" ) 
             && exp.front.has(++hit) 
         ) {
+            if( exp.front.attribs.length ) {
+                attribMatch = false;
+                foreach(Attribute attrib ; exp.front.attribs) {
+                    if( attrib.matches(node)) {
+                        attribMatch = true;
+                        break;
+                    }
+                }
+                if( ! attribMatch) { continue; }
+            }
+            
             DomFilter cExp = exp;
             cExp.popFront;
             resultNodes ~= filterDom(node.getChildren() , cExp);
@@ -225,4 +288,18 @@ Node[] filterDom(Node[] nodes , DomFilter[] expressions) {
 
     }
     return resultNodes;
+}
+
+Node[] filterComments(Node[] nodes) {
+    Node[] resultNodes;
+    foreach(node ; nodes) {
+        if(!node.isComment()) { 
+            resultNodes ~= node;
+        }
+    }
+    return resultNodes;
+}
+
+Node[] filterComments(Dominator dom) {
+    return dom.getNodes.filterComments();
 }
