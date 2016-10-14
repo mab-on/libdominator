@@ -21,11 +21,18 @@ auto rAttribExpression = ctRegex!(`([^:]+):([^,]+)*[,]?`);
 
 enum FilterPicktype { list,range }
 
+/**
+* Use this to filter html
+*/
 struct DomFilter {
     import std.conv : to;
+    import std.array : split;
     TagElement[] elements;
     size_t i;
     
+    /**
+    * A dominator specific array of filter expressions
+    */
     this(string[] expressions)
     {
         foreach(string expression ; expressions)
@@ -33,13 +40,15 @@ struct DomFilter {
             this.addExpression(expression);
         }
     }
-    
+     /**
+    * A dominator specific filter expression
+    */
     this(string expression)
     {
         this.addExpression(expression);
     }
     
-    void addExpression(string expression)
+    private void addExpression(string expression)
     {
         foreach(capt ; matchAll(expression, rDomFilterExpression) ) {
             TagElement tagElement;
@@ -66,16 +75,41 @@ struct DomFilter {
                 }
             }
             capt.popFront();
-            if( ! capt.empty) {
-                auto attribs =  AttributeFilter(capt.front);
-                tagElement.attribs = attribs.attribs;
+            if( ! capt.empty && capt.front.length) {    
+                tagElement.attribs = parseAttributexpression(capt.front);
             }
             this.elements ~= tagElement;
         }
     }
 
-    
-    bool popFront() {
+    ///parses the attribute filter expression and boxes it into an handy array of Attribute
+    Attribute[] parseAttributexpression(string expression) {
+        Attribute[] attribs;
+        foreach (mAttrib; matchAll(expression, rAttribExpression))
+        {
+            string key = chompPrefix(chomp(strip(mAttrib[1]), "\"'"), "\"'");
+            string[] values;
+            foreach (v; split(mAttrib[2]))
+            {
+                values ~= chompPrefix(chomp(strip(v), "\"'"), "\"'");
+            }
+            attribs ~= Attribute(key, values);
+        }
+        return attribs;
+    }
+    unittest {
+        auto f = DomFilter();
+        assert(f.parseAttributexpression("class:myClass,id:myID") == [Attribute("class", ["myClass"]), Attribute("id", ["myID"])]);
+        assert(f.parseAttributexpression("class:myClass") == [Attribute("class", ["myClass"])]);
+        assert(f.parseAttributexpression("data-url:http://www.mab-on.net/") == [Attribute("data-url", ["http://www.mab-on.net/"])]);
+    }
+
+    /**
+    * Moves the cursor to the next TagElement if exists
+    * Returns:
+    *   true if the cursor could be moved, otherwise false
+    */
+    bool next() {
         if( 1 + this.i < this.elements.length ) {
             this.i++;
             return true;
@@ -83,14 +117,20 @@ struct DomFilter {
         return false;
     }
     
+    /**
+    * The current TagElement, which is under the cursor.
+    * if there is no TagElement, then a empty TagElement will be returned.
+    */
     TagElement front() {
         return this.elements.length ? this.elements[this.i] : TagElement() ;
     }
     
+    ///The number of following TagElements after the current TagElement
     size_t followers() {
         return this.elements.length == 0 ? 0 : this.elements.length - 1 - this.i;
     }
     
+    ///opApply on TagElements
     int opApply(int delegate(ref TagElement) dg)
     {
         int result = 0;
@@ -105,6 +145,10 @@ struct DomFilter {
         return result;
     }
     
+    /**
+    * Checks if there are any TagElements.
+    * in other words: Checks if the DomFilter is loaded with some filterarguments or not.
+    */  
     bool empty() { return this.elements.length == 0; }
     
     unittest {
@@ -138,7 +182,13 @@ struct DomFilter {
         ]);
     }
 }
-
+/**
+* The TagElement is the struct for the atomic part of a filter expression.
+* Examples:
+* ---------------
+* a[1]{class:someClass}
+* ---------------
+*/
 struct TagElement
 {
     FilterPicktype picktype;
@@ -146,6 +196,7 @@ struct TagElement
     string name;
     Attribute[] attribs;
     
+    ///checks if the TagElement matches the given pick
     bool has(size_t pick)
     {
         if (picks.length == 0)
@@ -169,48 +220,18 @@ struct TagElement
         return false;
     }
 }
-struct AttributeFilter {
-    import std.array : split;
-    Attribute[] attribs;
-    
-    this(string expression)
-    {
-        if (expression.length)
-        {
-            foreach (mAttrib; matchAll(expression, rAttribExpression))
-            {
-                string key = chompPrefix(chomp(strip(mAttrib[1]), "\"'"), "\"'");
-                string[] values;
-                foreach (v; split(mAttrib[2]))
-                {
-                    values ~= chompPrefix(chomp(strip(v), "\"'"), "\"'");
-                }
-                this.attribs ~= Attribute(key, values);
-            }
-        }
-    }
-    
-    unittest {
-        AttributeFilter attribFilter;
 
-        attribFilter = AttributeFilter("class:myClass,id:myID");
-        assert(attribFilter.attribs == [Attribute("class", ["myClass"]), Attribute("id", ["myID"])]);
-        
-        attribFilter = AttributeFilter("class:myClass");
-        assert(attribFilter.attribs == [Attribute("class", ["myClass"])]);
-
-        attribFilter = AttributeFilter("data-url:http://www.mab-on.net/");
-        assert(attribFilter.attribs == [Attribute("data-url", ["http://www.mab-on.net/"])]);
-    }
-}
-
+///Filters the given DOM and returns the nodes, that matches the given filter expression
 Node[] filterDom(Dominator dom , DomFilter expressions) {
     return filterDom(dom,[expressions]);
 }
+
+///Filters the given DOM and returns the nodes, that matches the given filter expressions
 Node[] filterDom(Dominator dom , DomFilter[] expressions) {
     return dom.getNodes().filterDom(expressions);
 }
 
+///Filters the given Nodes and returns the nodes, that matches the given filter expressions
 Node[] filterDom(Node[] nodes , DomFilter[] expressions) {
     if(expressions.length == 0) {return nodes;}
     Node[] resultNodes;
@@ -220,7 +241,8 @@ Node[] filterDom(Node[] nodes , DomFilter[] expressions) {
     return resultNodes;
 }
 
- Node[] filterDom(Node[] nodes , DomFilter exp) {
+///Filters the given Nodes and returns the nodes, that matches the given filter expression
+Node[] filterDom(Node[] nodes , DomFilter exp) {
     if(exp.empty) { return nodes; }
     Node[] resultNodes;
     uint hit;
@@ -244,7 +266,7 @@ Node[] filterDom(Node[] nodes , DomFilter[] expressions) {
             }
             
             DomFilter cExp = exp;
-            cExp.popFront;
+            cExp.next;
             resultNodes ~= filterDom(node.getChildren() , cExp);
         }
         else if( !exp.followers && (exp.front.name == node.getTag() || exp.front.name == "*" ) ) {
@@ -262,7 +284,7 @@ Node[] filterDom(Node[] nodes , DomFilter[] expressions) {
         }
     }
     return resultNodes;
- }
+}
 
 /**
  throws the Nodes away which are inside of a comment

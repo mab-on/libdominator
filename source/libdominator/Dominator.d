@@ -205,7 +205,7 @@ class Dominator
      gets the Tag Name of the Node
      
      Params:
-      Node node = The Node to get the Tag Name from
+        node = The Node to get the Tag Name from
 
      Returns:
       The Tag Name as string
@@ -220,7 +220,7 @@ class Dominator
      gets the part of the loaded Document from the nodes begining to its end
 
      Params:
-      Node node = The Node from which you want to get the Document representation
+        node = The Node from which you want to get the Document representation
     */
     public string getElelment(Node node)
     {
@@ -232,7 +232,7 @@ class Dominator
      gets the Inner-HTML from the given node
 
      Params:
-      Node node = The Node from which you want to get the Inner-HTML 
+        node = The Node from which you want to get the Inner-HTML 
     */
     public string getInner(Node node)
     {

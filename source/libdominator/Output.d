@@ -18,6 +18,13 @@ import libdominator.Attribute;
 import libdominator.Dominator;
 import libdominator.Node;
 
+/**
+* Builds a output string
+* Params:
+*   dom = The DOM Object
+*   node = A node, that is part of dom
+*   optOutItems = Defines the output contents
+*/
 string[] nodeOutputItems(ref Dominator dom, Node node, string[] optOutItems)
 {
   string[] columns;

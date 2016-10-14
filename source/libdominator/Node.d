@@ -14,6 +14,7 @@ import std.conv : to ;
 
 import libdominator;
 
+///Represents a node in a DOM
 class Node {
   private string tag;
   private Attribute[] arrAttributes;
@@ -23,91 +24,113 @@ class Node {
   private Node* parent;
   private Node*[] children;
 
+  ///Makes a naked node object
   this() {}
 
+  ///Makes a node with a given tagname
   this(string tag) {
     this.setTag(tag);
   }
 
+  ///Makes a node with a given tagname and with the information for the position in the Document
   this(T)(string tag, T startPosition) {
     this.setTag(tag);
     this.setStartPosition(startPosition);
   }
 
+  ///Sets the tagname
   public Node setTag(string tag) {
     this.tag = toLower(tag);
     return this;
   }
 
+  ///Sets the position in the document where this node begins
   public Node setStartPosition(T)(T position) {
     this.startPos = to!uint(position);
     return this;
   }
 
+  ///Sets the position in the document where this node ends
   public Node setEndPosition(T)(T position) {
     this.endPos = to!uint(position);
     return this;
   }
 
+  ///Does what the name says
   public string getTag() {
     return this.tag;
   }
-
+  /// ditto
   public Attribute[] getAttributes() {
     return this.arrAttributes;
   }
 
+  /// ditto
   public void addAttribute(Attribute attribute) {
     this.arrAttributes ~= attribute;
   }
 
+  /// ditto
   public uint getStartPosition() {
     return this.startPos;
   }
 
+  /// ditto
   public uint getEndPosition() {
     return this.endPos;
   }
 
+  /// ditto
   public Node setStartTagLength(T)(T length) {
     this.startTagLength = to!ushort(length);
     return this;
   }
 
+  /// ditto
   public Node setEndTagLength(T)(T length) {
     this.endTagLength = to!ushort(length);
     return this;
   }
 
+  /// ditto
   public ushort getStartTagLength() {
     return this.startTagLength;
   }
 
+  /// ditto
   public ushort getEndTagLength() {
     return this.endTagLength;
   }
 
+  ///Markes this node to be inside of a comment
   public Node isComment(bool sw) {
     this.is_comment = sw;
     return this;
   }
-
+  
+  /**
+  * Returns: true if the node is marked to be inside of a comment, otherwise false.
+  */
   public bool isComment() {
     return this.is_comment;
   }
   
+  ///Sets the given node as the parent node
   public void setParent(Node* pNode) {
     this.parent = pNode;
   }
   
+  ///Does what the name says
   public Node getParent() {
     return this.parent is null ? new Node : (*this.parent);
   }
   
+  ///Adds a node as a child node
   public void addChild(Node* pNode) {
     this.children ~= pNode;
   }
   
+  ///Does what the name says
   public Node[] getChildren() {
     Node[] nodes;
     foreach(Node* pNode ; this.children) {
@@ -116,10 +139,16 @@ class Node {
     return nodes;
   }
   
+  /**
+  * Returns: true if the node has children nodes.
+  */
   public size_t hasChildren() {
     return this.children.length;
   }
   
+  /**
+  * Returns: true if the node has a parent node.
+  */
   public bool hasParent() {
     return (parent !is null);
   }
