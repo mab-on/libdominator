@@ -290,6 +290,11 @@ Node[] filterDom(Node[] nodes , DomFilter[] expressions) {
     return resultNodes;
 }
 
+/**
+ throws the Nodes away which are inside of a comment
+ Returns:
+  Node[]
+*/
 Node[] filterComments(Node[] nodes) {
     Node[] resultNodes;
     foreach(node ; nodes) {
@@ -300,6 +305,9 @@ Node[] filterComments(Node[] nodes) {
     return resultNodes;
 }
 
+/**
+ ditto
+*/
 Node[] filterComments(Dominator dom) {
     return dom.getNodes.filterComments();
 }

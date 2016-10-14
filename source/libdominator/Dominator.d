@@ -31,7 +31,7 @@ bool isBetween(size_t needle, size_t from, size_t to)
     return (needle >= from && needle <= to);
 }
 
-/// 
+///Parse, hierarchize, analyse xhtml
 class Dominator
 {
     private auto rNode = regex(`<([\w\d-]+)(?:[\s]*|[\s]+([^>]+))>`, "i");
@@ -41,17 +41,25 @@ class Dominator
     private comment[] comments;
 
     private Node[] nodes;
-    ;
 
-    this()
-    {
-    }
+    /**
+     Instantiate empty Dominator
+    */
+    this() {}
 
+    /**
+     Instantiate object and load the Document
+    */
     this(string haystack)
     {
         this.load(haystack);
     }
 
+    /**
+     loads a Document
+     Params:
+       haystack = the Document String
+    */
     public Dominator load(string haystack)
     {
         this.haystack = haystack;
@@ -113,7 +121,7 @@ class Dominator
         this.hierarchize(terminators);
     }
 
-    public void addNode(Node node)
+    private void addNode(Node node)
     {
         this.nodes ~= node;
     }
@@ -180,23 +188,52 @@ class Dominator
         }
     }
 
+    /**
+     returns all found Nodes.
+     Please note, that also Nodes will be returned which was found in comments.
+     use isComment() to check if a Node is in a comment or use libdominator.Filter.filterComments()
+
+     returns:
+      Nodes[]
+    */
     public Node[] getNodes()
     {
         return this.nodes;
     }
 
+    /**
+     gets the Tag Name of the Node
+     
+     Params:
+      Node node = The Node to get the Tag Name from
+
+     Returns:
+      The Tag Name as string
+    */
     public string getStartElement(Node node)
     {
         return this.haystack[node.getStartPosition() .. (
                 node.getStartPosition() + node.getStartTagLength())];
     }
 
+    /**
+     gets the part of the loaded Document from the nodes begining to its end
+
+     Params:
+      Node node = The Node from which you want to get the Document representation
+    */
     public string getElelment(Node node)
     {
         return this.haystack[node.getStartPosition() .. (
                 node.getEndPosition() + node.getEndTagLength())];
     }
 
+    /**
+     gets the Inner-HTML from the given node
+
+     Params:
+      Node node = The Node from which you want to get the Inner-HTML 
+    */
     public string getInner(Node node)
     {
         return (node.getEndPosition() > (node.getStartPosition() + node.getStartTagLength())) ? this.haystack[(
