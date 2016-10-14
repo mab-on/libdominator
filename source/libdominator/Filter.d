@@ -263,32 +263,6 @@ Node[] filterDom(Node[] nodes , DomFilter[] expressions) {
     }
     return resultNodes;
  }
- 
- Node[] filterAttribute(Node[] nodes, Attribute[] attribs)
-{
-    if (attribs.length == 0) {return nodes;}
-    
-    Node[] resultNodes;
-    foreach (Node node; nodes)
-    {
-        ubyte hitCount;
-        foreach (Attribute attrib; attribs)
-        {
-            if (attrib.matches(node))
-            {
-                if(hitCount+1 == attribs.length) 
-                {
-                    resultNodes ~= node;
-                }
-                else {
-                    hitCount++;
-                }
-            }
-        }
-
-    }
-    return resultNodes;
-}
 
 /**
  throws the Nodes away which are inside of a comment
