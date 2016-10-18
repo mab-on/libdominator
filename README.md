@@ -1,6 +1,16 @@
 #libdominator
 libdominator is a HTML parser library written in [d](http://www.dlang.org) 
 
+#Filter Syntax
+Expression = TAG[PICK]{ATTR_NAME:ATTR_VALUE}
+Multiple expression can be concated with "." to find Stuff inside of specific parent nodes.
+
+| Item | Description | Example |
+|------|-------------|---------|
+| TAG | The Name of the node | a , p , div , *  |
+| [PICK] | (can be ommited) Picks only the n th match. n begins on 1. PICK can be a list or range | [1] picks the first match , [1,3] picks the first and third , [1..3] picks the first three matches  |
+| {ATTR_NAME:ATTR_VALUE} | The attribute selector | {id:myID} , {class:someClass} , {href:(regex)^http://}  |
+
 #example
 ```dlang
 const string content = `<div id="div-2-div-1">
