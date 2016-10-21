@@ -2,8 +2,8 @@
  * Copyright:
  * (C) 2016 Martin Brzenska
  *
- * License: 
- * Distributed under the terms of the MIT license. 
+ * License:
+ * Distributed under the terms of the MIT license.
  * Consult the provided LICENSE.md file for details
  */
 module libdominator.Dominator;
@@ -35,8 +35,8 @@ bool isBetween(size_t needle, size_t from, size_t to)
 class Dominator
 {
     private auto rNode = regex(`<([\w\d-]+)(?:[\s]*|[\s]+([^>]+))>`, "i");
-    private auto rAttrib = regex(`([\w\d-_]+)=((")(?:\\"|[^"])*"|(')(?:\\'|[^'])*')`, "i");
-    private auto rComment = regex(`<!--.*-->`, "s");
+    private auto rAttrib = regex(`([\w\d-_]+)(?:=((")(?:\\"|[^"])*"|(')(?:\\'|[^'])*'))?`, "i");
+    private auto rComment = regex(`<!--.*?-->`, "s");
     private string haystack;
     private comment[] comments;
 
@@ -203,7 +203,7 @@ class Dominator
 
     /**
      gets the Tag Name of the Node
-     
+
      Params:
         node = The Node to get the Tag Name from
 
@@ -232,7 +232,7 @@ class Dominator
      gets the Inner-HTML from the given node
 
      Params:
-        node = The Node from which you want to get the Inner-HTML 
+        node = The Node from which you want to get the Inner-HTML
     */
     public string getInner(Node node)
     {
@@ -265,7 +265,7 @@ unittest {
     Dominator dom = new Dominator(readText("dummy.html"));
     auto filter = DomFilter("article");
     assert( dom.filterDom(filter).filterComments().length == 1 );
-    assert( dom.filterDom(filter).length == 3 );
+    assert( dom.filterDom(filter).length == 2 );
 
     filter = DomFilter("div.*.ol.li");
     assert( dom.filterDom(filter).length == 3 );
@@ -282,4 +282,6 @@ unittest {
     filter = DomFilter(`ol{id:ol-1}.li{id:(regex)^li-[\d]+}`);
     assert( dom.filterDom(filter).length == 3 );
 
+    filter = DomFilter(`*{checked:}`);
+    assert( dom.filterDom(filter).length == 1 );
 }
