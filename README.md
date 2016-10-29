@@ -3,7 +3,7 @@ libdominator is a HTML parser library written in [d](http://www.dlang.org)
 
 #Filter Syntax
 Expression = TAG[PICK]{ATTR_NAME:ATTR_VALUE}
-Multiple expression can be concated with "." to find Stuff inside of specific parent nodes.
+Multiple expressions can be concatenated with "." to find stuff inside of specific parent nodes.
 
 | Item | Description | Example |
 |------|-------------|---------|
