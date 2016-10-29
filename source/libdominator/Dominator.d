@@ -28,7 +28,7 @@ struct terminator
 
 bool isBetween(size_t needle, size_t from, size_t to)
 {
-    return (needle >= from && needle <= to);
+    return (needle > from && needle < to);
 }
 
 ///Parse, hierarchize, analyse xhtml
@@ -70,13 +70,11 @@ class Dominator
     private void parse()
     {
         import std.string : chomp, chompPrefix;
-
         foreach (mComment; matchAll(this.haystack, this.rComment))
         {
             this.comments ~= comment(to!uint(mComment.pre().length),
                     to!uint(mComment.pre().length) + to!uint(mComment.front.length));
         }
-
         terminator[][string] terminators;
         foreach (mNode; matchAll(this.haystack, this.rNode))
         {
@@ -262,10 +260,11 @@ unittest {
 }
 
 unittest {
+    import std.conv : to;
     Dominator dom = new Dominator(readText("dummy.html"));
     auto filter = DomFilter("article");
-    assert( dom.filterDom(filter).filterComments().length == 1 );
-    assert( dom.filterDom(filter).length == 2 );
+    assert( dom.filterDom(filter).filterComments().length == 3 , to!(string)(dom.filterDom(filter).filterComments().length) );
+    assert( dom.filterDom(filter).length == 6 , to!(string)(dom.filterDom(filter).length));
 
     filter = DomFilter("div.*.ol.li");
     assert( dom.filterDom(filter).length == 3 );
@@ -283,5 +282,17 @@ unittest {
     assert( dom.filterDom(filter).length == 3 );
 
     filter = DomFilter(`*{checked:}`);
+    assert( dom.filterDom(filter).length == 1 );
+
+    filter = DomFilter(`onelinenested`);
+    assert( dom.filterDom(filter).length == 2 );
+
+    filter = DomFilter(`onelinenested{class:level1}`);
+    assert( dom.filterDom(filter).length == 1 );
+
+    filter = DomFilter(`onelinenested{class:level2}`);
+    assert( dom.filterDom(filter).length == 1 );
+
+    filter = DomFilter(`onelinenested.onelinenested`);
     assert( dom.filterDom(filter).length == 1 );
 }
