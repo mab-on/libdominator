@@ -105,7 +105,7 @@ class Dominator
             if (node.getTag() !in terminators)
             {
                 foreach (mTerminatorCandi; matchAll(this.haystack[node.getStartPosition() .. $],
-                        regex(r"</" ~ node.getTag() ~ ">")))
+                        regex(r"</" ~ node.getTag() ~ ">","i")))
                 {
                     terminators[node.getTag()] ~= terminator(node.getStartPosition() + to!uint(mTerminatorCandi.pre()
                             .length), to!ushort(mTerminatorCandi.front.length));
