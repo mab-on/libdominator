@@ -2,8 +2,8 @@
  * Copyright:
  * (C) 2016 Martin Brzenska
  *
- * License: 
- * Distributed under the terms of the MIT license. 
+ * License:
+ * Distributed under the terms of the MIT license.
  * Consult the provided LICENSE.md file for details
  */
 module libdominator.Attribute;
@@ -26,7 +26,8 @@ struct Attribute
     */
     this(string key, string values)
     {
-        this.key = key;
+        import std.string : toLower;
+        this.key = toLower(key);
         this.values = split(values);
     }
     /**
@@ -96,7 +97,7 @@ struct Attribute
                     }
                     if(hitCount == values.length) { return true; }
                 }
-            }   
+            }
         }
         return false;
     }
@@ -104,7 +105,7 @@ struct Attribute
     /**
     * Checks if the given node matches key and values of this attribute.
     * Note that all atribute values from this attribute must match the given nodes attribute values - not the other way round
-    */  
+    */
     bool matches(Node node)
     {
         return this.matchesKey(node) && this.matchesValue(node);
