@@ -151,8 +151,7 @@ class Dominator
                 if (node.getStartPosition() > terminatorCandi.position)
                 {
                     arrTerminatorBlacklist[_lastTerm.position] = true;
-                    node.setEndPosition(_lastTerm.position)
-                        .setEndTagLength(to!ushort(terminatorCandi.length));
+                    node.setEndPosition(_lastTerm.position).setEndTagLength(0);
                     isTerminated = true;
                     break;
                 }
