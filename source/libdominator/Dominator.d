@@ -35,7 +35,7 @@ bool isBetween(size_t needle, size_t from, size_t to)
 class Dominator
 {
     private auto rNode = regex(`<([\w\d-]+)(?:[\s]*|[\s]+([^>]+))>`, "i");
-    private auto rAttrib = regex(`([\w\d-_]+)(?:=((")(?:\\"|[^"])*"|(')(?:\\'|[^'])*'))?`, "i");
+    private auto rAttrib = regex(`([\w\d-_]+)(?:=((")(?:\\"|[^"])*"|(')(?:\\'|[^'])*'|(?:\\[\s]|[^\s])*([\s])*))?`, "i");
     private auto rComment = regex(`<!--.*?-->`, "s");
     private string haystack;
     private comment[] comments;
@@ -94,9 +94,18 @@ class Dominator
                 mNode.popFront();
                 foreach (mAttrib; matchAll(mNode.front, this.rAttrib))
                 {
-                    node.addAttribute(Attribute(mAttrib[1],
-                            chompPrefix(chomp(mAttrib[2],
-                            mAttrib[3] ~ mAttrib[4]), mAttrib[3] ~ mAttrib[4])));
+                    node.addAttribute(
+                        Attribute(
+                            mAttrib[1],
+                            chompPrefix(
+                                chomp(
+                                    mAttrib[2],
+                                    mAttrib[3] ~ mAttrib[4] ~ mAttrib[5]
+                                ),
+                                mAttrib[3] ~ mAttrib[4] ~ mAttrib[5]
+                            )
+                        )
+                    );
                 }
             }
             this.addNode(node);
@@ -295,4 +304,22 @@ unittest {
 
     filter = DomFilter(`onelinenested.onelinenested`);
     assert( dom.filterDom(filter).length == 1 );
+
+    /**
+    * Find the nodes with a special href.
+    */
+    filter = DomFilter(`*{href:https://www.google.com/support/contact/user?hl=en}`);
+    assert( dom.filterDom(filter).length);
+    foreach(Node foundNode ; dom.filterDom(filter)) {
+        assert (Attribute("href","https://www.google.com/support/contact/user?hl=en").matches(foundNode) );
+    }
+
+    /**
+    * Find the nodes with a special href - In HTML5 it is ok to have attribute-values without quotation marks.
+    */
+    filter = DomFilter(`*{href://www.google.com/}`);
+    assert( dom.filterDom(filter).length);
+    foreach(Node foundNode ; dom.filterDom(filter)) {
+        assert( Attribute("href","//www.google.com/").matches(foundNode) );
+    }
 }
