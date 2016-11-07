@@ -2,8 +2,8 @@
  * Copyright:
  * (C) 2016 Martin Brzenska
  *
- * License: 
- * Distributed under the terms of the MIT license. 
+ * License:
+ * Distributed under the terms of the MIT license.
  * Consult the provided LICENSE.md file for details
  */
 module libdominator.Output;
@@ -19,7 +19,8 @@ import libdominator.Dominator;
 import libdominator.Node;
 
 /**
-* Builds a output string
+* Builds a output string.
+* This is usefull for formating output for the command-line.
 * Params:
 *   dom = The DOM Object
 *   node = A node, that is part of dom
@@ -35,11 +36,14 @@ string[] nodeOutputItems(ref Dominator dom, Node node, string[] optOutItems)
       case "tag":
         columns ~= node.getTag();
       break;
+      case "element":
+        columns ~= dom.getElelment(node);
+      break;
       case "element-opener":
         columns ~= dom.getStartElement(node);
         break;
-      case "element":
-        columns ~= dom.getElelment(node);
+      case "element-length":
+        columns ~= to!string(node.getStartTagLength());
       break;
       case "element-start":
         columns ~= to!string(node.getStartPosition());
@@ -60,8 +64,8 @@ string[] nodeOutputItems(ref Dominator dom, Node node, string[] optOutItems)
         if(optOutItem.length > 7 && optOutItem[0..7] == "attrib(")
         {
           size_t closerIndex = lastIndexOf(optOutItem, ")");
-          if(closerIndex) 
-          { 
+          if(closerIndex)
+          {
             string[] keyvalues;
             foreach(Attribute fAttrib ; node.getAttributes().filter!(a => a.key == optOutItem[7..closerIndex]))
             {
@@ -69,6 +73,12 @@ string[] nodeOutputItems(ref Dominator dom, Node node, string[] optOutItems)
             }
             columns ~= join(keyvalues, ",");
           }
+        }
+        else {
+          /*
+          * If no "OutItem" matches, output he input right away.
+          */
+          columns ~= optOutItem;
         }
       break;
     }
