@@ -142,7 +142,7 @@ class Dominator
         {
             terminator _lastTerm = terminator(node.getStartPosition(), 0);
             bool isTerminated = false;
-            foreach_reverse (size_t t, terminator terminatorCandi; terminators[node.getTag()])
+            foreach_reverse (terminator terminatorCandi; terminators[node.getTag()])
             {
                 if (terminatorCandi.position in arrTerminatorBlacklist)
                 {
