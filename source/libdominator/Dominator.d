@@ -8,11 +8,20 @@
  */
 module libdominator.Dominator;
 
-import std.regex : regex, matchAll;
+import std.regex : Regex , regex, matchAll , ctRegex;
 import std.conv : to;
 
 import libdominator.Attribute;
 import libdominator.Node;
+
+static Regex!char rNode;
+static Regex!char rAttrib;
+static Regex!char rComment;
+static this() {
+    rNode = ctRegex!(`<([\w\d-]+)(?:[\s]*|[\s]+([^>]+))>`, "i");
+    rAttrib = ctRegex!(`([\w\d-_]+)(?:=((")(?:\\"|[^"])*"|(')(?:\\'|[^'])*'|(?:\\[\s]|[^\s])*([\s])*))?`, "i");
+    rComment = ctRegex!(`<!--.*?-->`, "s");
+}
 
 struct comment
 {
@@ -34,9 +43,7 @@ bool isBetween(size_t needle, size_t from, size_t to)
 ///Parse, hierarchize, analyse xhtml
 class Dominator
 {
-    private auto rNode = regex(`<([\w\d-]+)(?:[\s]*|[\s]+([^>]+))>`, "i");
-    private auto rAttrib = regex(`([\w\d-_]+)(?:=((")(?:\\"|[^"])*"|(')(?:\\'|[^'])*'|(?:\\[\s]|[^\s])*([\s])*))?`, "i");
-    private auto rComment = regex(`<!--.*?-->`, "s");
+    //private auto rComment = regex(`<!--.*?-->`, "s");
     private string haystack;
     private comment[] comments;
 
@@ -70,13 +77,13 @@ class Dominator
     private void parse()
     {
         import std.string : chomp, chompPrefix;
-        foreach (mComment; matchAll(this.haystack, this.rComment))
+        foreach (mComment; matchAll(this.haystack, rComment))
         {
             this.comments ~= comment(to!uint(mComment.pre().length),
                     to!uint(mComment.pre().length) + to!uint(mComment.front.length));
         }
         terminator[][string] terminators;
-        foreach (mNode; matchAll(this.haystack, this.rNode))
+        foreach (mNode; matchAll(this.haystack, rNode))
         {
             auto node = new Node();
             node.setStartTagLength(mNode.front.length);
@@ -92,7 +99,7 @@ class Dominator
             if (!mNode.empty)
             {
                 mNode.popFront();
-                foreach (mAttrib; matchAll(mNode.front, this.rAttrib))
+                foreach (mAttrib; matchAll(mNode.front, rAttrib))
                 {
                     node.addAttribute(
                         Attribute(
