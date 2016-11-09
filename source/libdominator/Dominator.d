@@ -18,7 +18,7 @@ static Regex!char rNode;
 static Regex!char rAttrib;
 static Regex!char rComment;
 static this() {
-    rNode = ctRegex!(`<([\w\d-]+)(?:[\s]*|[\s]+([^>]+))>`, "i");
+    rNode = ctRegex!(`<([\w\d-]+)(?:[\s]*|((?:[^>]+=[\s]*['"][^'"]*>[^'"]*['"])+[^>]*|[^>]+))>`, "i");
     rAttrib = ctRegex!(`([\w\d-_]+)(?:=((")(?:\\"|[^"])*"|(')(?:\\'|[^'])*'|(?:\\[\s]|[^\s])*([\s])*))?`, "i");
     rComment = ctRegex!(`<!--.*?-->`, "s");
 }
