@@ -18,7 +18,7 @@ static Regex!char rNode;
 static Regex!char rAttrib;
 static Regex!char rComment;
 static this() {
-    rNode = ctRegex!(`<([\w\d-]+)(?:[\s]*|((?:[^>]+=[\s]*['"][^'"]*>[^'"]*['"])+[^>]*|[^>]+))>`, "i");
+    rNode = ctRegex!(`<[\s]*([\w\d-]+)(?:[\s]*|((?:[^>]+=[\s]*['"][^'"]*>[^'"]*['"])+[^>]*|[^>]+))>`, "i");
     rAttrib = ctRegex!(`([\w\d-_]+)(?:=((")(?:\\"|[^"])*"|(')(?:\\'|[^'])*'|(?:\\[\s]|[^\s])*([\s])*))?`, "i");
     rComment = ctRegex!(`<!--.*?-->`, "s");
 }
@@ -121,7 +121,7 @@ class Dominator
             if (node.getTag() !in terminators)
             {
                 foreach (mTerminatorCandi; matchAll(this.haystack[node.getStartPosition() .. $],
-                        regex(r"</" ~ node.getTag() ~ ">","i")))
+                        regex(`<[\s]*/` ~ node.getTag() ~ `[\s]*>`, "i")))
                 {
                     terminators[node.getTag()] ~= terminator(node.getStartPosition() + to!uint(mTerminatorCandi.pre()
                             .length), to!ushort(mTerminatorCandi.front.length));
