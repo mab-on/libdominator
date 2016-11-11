@@ -75,12 +75,35 @@ class Dominator
     }
 
     private size_t findNodesLenth(size_t nodeHeadPos) {
-        size_t len = 0;
-        while(this.haystack[nodeHeadPos + len] != '>')
+        size_t len;
+        bool hasQuoteMarkFailure;
+        bool openSingleQuoteMark;
+        bool openDoubleQuoteMark;
+        char inQuote = 0x00;
+        while(this.haystack.length > nodeHeadPos + len)
         {
+            if(
+                this.haystack[nodeHeadPos + len] == '>'
+                && inQuote == 0x00
+            ) {
+                return 1+len;
+            }
             len++;
+            if(
+                this.haystack[nodeHeadPos + len] == inQuote
+                && this.haystack[nodeHeadPos + len -1] != '\\'
+            ) {
+                inQuote = 0x00;
+            }
+            else if(
+                inQuote == 0x00
+                && (this.haystack[nodeHeadPos + len] == '\''
+                || this.haystack[nodeHeadPos + len] == '"')
+            ) {
+                inQuote = this.haystack[nodeHeadPos + len];
+            }
         }
-        return 1+len;
+        return 1+len; //we should never get here
     }
 
     private void parse()
@@ -115,7 +138,6 @@ class Dominator
                     node.isComment(true);
                 }
             }
-
 
             //parse the attributes, if there are one or more
             if(
@@ -295,7 +317,7 @@ version(unittest) {
 }
 
 unittest {
-    const string content = `<div>
+    const string content = `<div data-function=">">
         <ol id="ol-1">
           <li id="li-1-ol-1">li-1-ol-1 Inner</li>
           <li id="li-2-ol-1">li-2-ol-1 Inner</li>
