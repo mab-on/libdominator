@@ -14,11 +14,11 @@ import std.conv : to;
 import libdominator.Attribute;
 import libdominator.Node;
 
-static Regex!char rNode;
+static Regex!char rNodeHead;
 static Regex!char rAttrib;
 static Regex!char rComment;
 static this() {
-    rNode = ctRegex!(`<[\s]*([\w\d-]+)(?:[\s]*|((?:[^>]+=[\s]*['"][^'"]*>[^'"]*['"])+[^>]*|[^>]+))>`, "i");
+    rNodeHead = ctRegex!(`<[\s]*([\w\d-]+)`, "i");
     rAttrib = ctRegex!(`([\w\d-_]+)(?:=((")(?:\\"|[^"])*"|(')(?:\\'|[^'])*'|(?:\\[\s]|[^\s])*([\s])*))?`, "i");
     rComment = ctRegex!(`<!--.*?-->`, "s");
 }
@@ -74,6 +74,38 @@ class Dominator
         return this;
     }
 
+    private size_t findNodesLenth(size_t nodeHeadPos) {
+        size_t len;
+        bool hasQuoteMarkFailure;
+        bool openSingleQuoteMark;
+        bool openDoubleQuoteMark;
+        char inQuote = 0x00;
+        while(this.haystack.length > nodeHeadPos + len)
+        {
+            if(
+                this.haystack[nodeHeadPos + len] == '>'
+                && inQuote == 0x00
+            ) {
+                return 1+len;
+            }
+            len++;
+            if(
+                this.haystack[nodeHeadPos + len] == inQuote
+                && this.haystack[nodeHeadPos + len -1] != '\\'
+            ) {
+                inQuote = 0x00;
+            }
+            else if(
+                inQuote == 0x00
+                && (this.haystack[nodeHeadPos + len] == '\''
+                || this.haystack[nodeHeadPos + len] == '"')
+            ) {
+                inQuote = this.haystack[nodeHeadPos + len];
+            }
+        }
+        return 1+len; //we should never get here
+    }
+
     private void parse()
     {
         import std.string : chomp, chompPrefix;
@@ -83,12 +115,22 @@ class Dominator
                     to!uint(mComment.pre().length) + to!uint(mComment.front.length));
         }
         terminator[][string] terminators;
-        foreach (mNode; matchAll(this.haystack, rNode))
+        foreach (mNode; matchAll(this.haystack, rNodeHead))
         {
             auto node = new Node();
-            node.setStartTagLength(mNode.front.length);
+            /*
+            * We have a good candidate for a opening node.
+            * We know the beginning position (and how long the "head" is)
+            * Next, we need to find out where the opener ends.
+            */
             mNode.popFront();
-            node.setTag(mNode.front).setStartPosition(mNode.pre().length);
+            node.setTag(mNode.front)
+                .setStartPosition(mNode.pre().length);
+            node.setStartTagLength(
+                node.getTag().length + this.findNodesLenth( node.getTag().length + node.getStartPosition() )
+            );
+
+            //check if this node is inside of a comment - if yes, mark it.
             foreach (comment cmnt; this.comments)
             {
                 if (isBetween(node.getStartPosition(), cmnt.begin, cmnt.end))
@@ -96,10 +138,25 @@ class Dominator
                     node.isComment(true);
                 }
             }
-            if (!mNode.empty)
+
+            //parse the attributes, if there are one or more
+            if(
+                node.getStartPosition + mNode.hit().length + 1
+                <
+                node.getStartPosition + node.getStartTagLength() -1
+            )
             {
-                mNode.popFront();
-                foreach (mAttrib; matchAll(mNode.front, rAttrib))
+                foreach (
+                    mAttrib;
+                    matchAll(
+                        this.haystack[
+                            node.getStartPosition + mNode.hit().length + 1
+                            ..
+                            node.getStartPosition + node.getStartTagLength() -1
+                            ],
+                        rAttrib
+                    )
+                )
                 {
                     node.addAttribute(
                         Attribute(
@@ -121,7 +178,7 @@ class Dominator
             if (node.getTag() !in terminators)
             {
                 foreach (mTerminatorCandi; matchAll(this.haystack[node.getStartPosition() .. $],
-                        regex(`<[\s]*/` ~ node.getTag() ~ `[\s]*>`, "i")))
+                        regex(`<[\s]*/` ~ node.getTag() ~ `[\s]*>`,"i")))
                 {
                     terminators[node.getTag()] ~= terminator(node.getStartPosition() + to!uint(mTerminatorCandi.pre()
                             .length), to!ushort(mTerminatorCandi.front.length));
@@ -260,7 +317,7 @@ version(unittest) {
 }
 
 unittest {
-    const string content = `<div id="div-2-div-1">
+    const string content = `<div data-function=">">
         <ol id="ol-1">
           <li id="li-1-ol-1">li-1-ol-1 Inner</li>
           <li id="li-2-ol-1">li-2-ol-1 Inner</li>
