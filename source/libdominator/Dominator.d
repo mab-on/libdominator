@@ -76,9 +76,6 @@ class Dominator
 
     private size_t findNodesLenth(size_t nodeHeadPos) {
         size_t len;
-        bool hasQuoteMarkFailure;
-        bool openSingleQuoteMark;
-        bool openDoubleQuoteMark;
         char inQuote = 0x00;
         while(this.haystack.length > nodeHeadPos + len)
         {
