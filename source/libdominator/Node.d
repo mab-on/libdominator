@@ -2,8 +2,8 @@
  * Copyright:
  * (C) 2016 Martin Brzenska
  *
- * License: 
- * Distributed under the terms of the MIT license. 
+ * License:
+ * Distributed under the terms of the MIT license.
  * Consult the provided LICENSE.md file for details
  */
 module libdominator.Node;
@@ -107,29 +107,29 @@ class Node {
     this.is_comment = sw;
     return this;
   }
-  
+
   /**
   * Returns: true if the node is marked to be inside of a comment, otherwise false.
   */
   public bool isComment() {
     return this.is_comment;
   }
-  
+
   ///Sets the given node as the parent node
   public void setParent(Node* pNode) {
     this.parent = pNode;
   }
-  
+
   ///Does what the name says
   public Node getParent() {
     return this.parent is null ? new Node : (*this.parent);
   }
-  
+
   ///Adds a node as a child node
   public void addChild(Node* pNode) {
     this.children ~= pNode;
   }
-  
+
   ///Does what the name says
   public Node[] getChildren() {
     Node[] nodes;
@@ -138,19 +138,39 @@ class Node {
     }
     return nodes;
   }
-  
+
   /**
   * Returns: true if the node has children nodes.
   */
   public size_t hasChildren() {
     return this.children.length;
   }
-  
+
+  /**
+  * Does what the name says
+  */
+  public Node[] getSiblings() {
+    import std.algorithm.mutation : remove;
+    return remove!(a => a.getStartPosition() == this.getStartPosition())(this.getParent().getChildren());
+  }
+
   /**
   * Returns: true if the node has a parent node.
   */
   public bool hasParent() {
     return (parent !is null);
   }
-  
+
+  private void collectDescendants(Node node , ref Node[] nodes) {
+    foreach(Node childNode ; node.getChildren()) {
+      nodes ~= childNode;
+      collectDescendants(childNode , nodes);
+    }
+  }
+
+  public Node[] getDescendants() {
+    Node[] nodes;
+    collectDescendants(this , nodes);
+    return nodes;
+  }
 }
