@@ -14,6 +14,11 @@ import std.conv : to;
 import libdominator.Attribute;
 import libdominator.Node;
 
+version(unittest) {
+    import libdominator.Filter;
+    import std.file;
+}
+
 static Regex!char rNodeHead;
 static Regex!char rAttrib;
 static Regex!char rComment;
@@ -177,8 +182,10 @@ class Dominator
                 foreach (mTerminatorCandi; matchAll(this.haystack[node.getStartPosition() .. $],
                         regex(`<[\s]*/` ~ node.getTag() ~ `[\s]*>`,"i")))
                 {
-                    terminators[node.getTag()] ~= terminator(node.getStartPosition() + to!uint(mTerminatorCandi.pre()
-                            .length), to!ushort(mTerminatorCandi.front.length));
+                    terminators[node.getTag()] ~= terminator(
+                        node.getStartPosition() + to!uint(mTerminatorCandi.pre().length),
+                        to!ushort(mTerminatorCandi.front.length)
+                    );
                 }
                 if (node.getTag() !in terminators)
                 {
@@ -301,21 +308,52 @@ class Dominator
     }
 
     /**
-     gets the Inner-HTML from the given node
-
-     Params:
-        node = The Node from which you want to get the Inner-HTML
+    * gets the Inner-HTML from the given node
+    *
+    * Params:
+    *    node = The Node from which you want to get the Inner-HTML
     */
     public string getInner(Node node)
     {
         return (node.getEndPosition() > (node.getStartPosition() + node.getStartTagLength())) ? this.haystack[(
                 node.getStartPosition() + node.getStartTagLength()) .. (node.getEndPosition())] : "";
     }
-}
 
-version(unittest) {
-    import libdominator.Filter;
-    import std.file;
+    /**
+    * Removes tags and returns plain inner content
+    */
+    public string stripTags(Node node) {
+        import std.algorithm.searching : any;
+        string inner;
+        Node[] descendants = node.getDescendants();
+        for(size_t i = node.getStartPosition + node.getStartTagLength ; i < node.getEndPosition ; i++) {
+            if( !
+                any!(desc =>
+                isBetween(i , desc.getStartPosition()-1 , desc.getStartPosition()+desc.getStartTagLength())
+                || isBetween(i , desc.getEndPosition()-1 , desc.getEndPosition()+desc.getEndTagLength())
+                )(descendants)
+            ) {
+                inner ~= this.haystack[i];
+            }
+        }
+        return inner;
+    }
+
+    /**
+    * Removes tags and returns plain inner content
+    */
+    public string stripTags() {
+        if( ! this.nodes.length) {
+            return "";
+        }
+        return this.stripTags((*this.nodes.ptr));
+    }
+    ///
+    unittest {
+        const string content = `<div><h2>bla</h2><p>fasel</p></div>`;
+        Dominator dom = new Dominator(content);
+        assert( dom.stripTags() == "blafasel");
+    }
 }
 
 unittest {
@@ -331,6 +369,28 @@ unittest {
       assert( dom.filterDom(DomFilter("ol")).length == 1 );
       assert( dom.filterDom(DomFilter("ol.li")).length == 3 );
       assert( dom.filterDom(DomFilter("ol.li{id:li-3-ol-1}")).length == 1 );
+}
+
+/// get descendants of a specific Node and apply further filtering on the result.
+unittest {
+    const string content = `<div data-function=">">
+        <span>
+            <span>
+                <span>bäm!</span>
+            </span>
+            <span>boing!</span>
+        </span>
+        <ol id="ol-1">
+          <li id="li-1-ol-1">li-1-ol-1 Inner</li>
+          <li id="li-2-ol-1">li-2-ol-1 Inner</li>
+          <li id="li-3-ol-1">li-3-ol-1 Inner</li>
+        </ol>
+      </div>`;
+      Dominator dom = new Dominator(content);
+      Node [] descendants = (*dom.filterDom(DomFilter("div")).ptr).getDescendants();
+      assert( descendants.filterDom(DomFilter("span")).length == 4 );
+      assert( descendants.filterDom(DomFilter("li")).length == 3 );
+      assert( descendants.filterDom(DomFilter("ol")).length == 1 );
 }
 
 unittest {
