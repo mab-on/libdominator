@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<title>Dominator.stripTags - multiple declarations</title>
+		<link rel="stylesheet" type="text/css" href="../../styles/ddox.css"/>
+		<link rel="stylesheet" href="../../prettify/prettify.css" type="text/css"/>
+		<script type="text/javascript" src="../../scripts/jquery.js">/**/</script>
+		<script type="text/javascript" src="../../scripts/ddox.js">/**/</script>
+	</head>
+	<body onload="setupDdox();">
+		<nav id="main-nav">
+						<ul class="tree-view">
+							<li class="tree-view">
+								<a href="#" class="package">libdominator</a>
+						<ul class="tree-view">
+							<li>
+								<a href="../../libdominator.html" class=" module">Package members</a>
+							</li>
+							<li>
+								<a href="../../libdominator/Attribute.html" class=" module">Attribute</a>
+							</li>
+							<li>
+								<a href="../../libdominator/Dominator.html" class="selected module">Dominator</a>
+							</li>
+							<li>
+								<a href="../../libdominator/Filter.html" class=" module">Filter</a>
+							</li>
+							<li>
+								<a href="../../libdominator/Node.html" class=" module">Node</a>
+							</li>
+							<li>
+								<a href="../../libdominator/Output.html" class=" module">Output</a>
+							</li>
+						</ul>
+							</li>
+						</ul>
+				<noscript>
+					<p style="color: red">The search functionality needs JavaScript enabled</p>
+				</noscript>
+				<div id="symbolSearchPane" style="display: none">
+					<p>
+						<input id="symbolSearch" type="text" placeholder="Search for symbols" onchange="performSymbolSearch(24);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();"/>
+					</p>
+	<ul id="symbolSearchResults" style="display: none"></ul>
+	<script type="application/javascript" src="../../symbols.js"></script>
+	<script type="application/javascript">
+var symbolSearchRootDir = "../../";
+$('#symbolSearchPane').show();
+	</script>
+				</div>
+		</nav>
+		<div id="main-contents">
+			<h1>Dominator.stripTags - multiple declarations</h1>
+			<ul>
+				<li>Function Dominator.stripTags</li>
+				<li>Function Dominator.stripTags</li>
+			</ul>
+			<section>
+				<h2>Function Dominator.stripTags</h2>
+				<p>Removes tags and returns plain inner content
+</p>
+
+					<section>
+						<h3>Prototype</h3>
+						<div class="prototype">
+							<code class="lang-d">
+<span class="typ">string</span> <span class="pln">stripTags</span><span class="pun">(</span>
+								<br/>
+&nbsp;&nbsp;<a href="../../libdominator/Node/Node.html"><span class="typ">Node</span></a> <span class="pln">node</span>
+								<br/>
+<span class="pun">)</span><span class="pun">;</span>
+							</code>
+						</div>
+					</section>
+
+			</section>
+			<section>
+				<h2>Function Dominator.stripTags</h2>
+				<p>Removes tags and returns plain inner content
+</p>
+
+					<section>
+						<h3>Prototype</h3>
+						<div class="prototype">
+							<code class="lang-d">
+<span class="typ">string</span> <span class="pln">stripTags<span class="pun">()</span><span class="pun">;</span>
+							</code>
+						</div>
+					</section>
+<section><h3>Example</h3>
+<pre class="code"><code class="lang-d"><span class="kwd">const </span><span class="typ">string </span><span class="pln">content </span><span class="pun">= </span><span class="str">`&lt;div&gt;&lt;h2&gt;bla&lt;/h2&gt;&lt;p&gt;fasel&lt;/p&gt;&lt;/div&gt;`</span><span class="pun">;
+<a href="../../libdominator/Dominator/Dominator.html"></span><span class="typ">Dominator</span></a><span class="pln"> dom </span><span class="pun">= </span><span class="kwd">new <a href="../../libdominator/Dominator/Dominator.html"></span><span class="typ">Dominator</span></a><span class="pun">(</span><span class="pln">content</span><span class="pun">);
+</span><span class="kwd">assert</span><span class="pun">( </span><span class="pln">dom<wbr/></span><span class="pun">.</span><span class="pln">stripTags</span><span class="pun">() == </span><span class="str">"blafasel"</span><span class="pun">);
+}
+</span></code></pre>
+</section>
+
+			</section>
+			<section>
+				<h2>Authors</h2>
+
+			</section>
+			<section>
+				<h2>Copyright</h2>
+<p>(C) 2016 Martin Brzenska
+</p>
+
+			</section>
+			<section>
+				<h2>License</h2>
+<p>Distributed under the terms of the MIT license.
+ Consult the provided LICENSE.md file for details
+</p>
+
+			</section>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<title>Function nodeOutputItems</title>
+		<link rel="stylesheet" type="text/css" href="../../styles/ddox.css"/>
+		<link rel="stylesheet" href="../../prettify/prettify.css" type="text/css"/>
+		<script type="text/javascript" src="../../scripts/jquery.js">/**/</script>
+		<script type="text/javascript" src="../../scripts/ddox.js">/**/</script>
+	</head>
+	<body onload="setupDdox();">
+		<nav id="main-nav">
+						<ul class="tree-view">
+							<li class="tree-view">
+								<a href="#" class="package">libdominator</a>
+						<ul class="tree-view">
+							<li>
+								<a href="../../libdominator.html" class=" module">Package members</a>
+							</li>
+							<li>
+								<a href="../../libdominator/Attribute.html" class=" module">Attribute</a>
+							</li>
+							<li>
+								<a href="../../libdominator/Dominator.html" class=" module">Dominator</a>
+							</li>
+							<li>
+								<a href="../../libdominator/Filter.html" class=" module">Filter</a>
+							</li>
+							<li>
+								<a href="../../libdominator/Node.html" class=" module">Node</a>
+							</li>
+							<li>
+								<a href="../../libdominator/Output.html" class="selected module">Output</a>
+							</li>
+						</ul>
+							</li>
+						</ul>
+				<noscript>
+					<p style="color: red">The search functionality needs JavaScript enabled</p>
+				</noscript>
+				<div id="symbolSearchPane" style="display: none">
+					<p>
+						<input id="symbolSearch" type="text" placeholder="Search for symbols" onchange="performSymbolSearch(24);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();"/>
+					</p>
+	<ul id="symbolSearchResults" style="display: none"></ul>
+	<script type="application/javascript" src="../../symbols.js"></script>
+	<script type="application/javascript">
+var symbolSearchRootDir = "../../";
+$('#symbolSearchPane').show();
+	</script>
+				</div>
+		</nav>
+		<div id="main-contents">
+			<h1>Function nodeOutputItems</h1>
+			<section>
+				<p>Builds a output string.
+ This is usefull for formating output for the command-line.
+</p>
+
+					<section>
+						<h3>Prototype</h3>
+						<div class="prototype">
+							<code class="lang-d">
+<span class="typ">string</span><span class="pun">[]</span> <span class="pln">nodeOutputItems</span><span class="pun">(</span>
+								<br/>
+&nbsp;&nbsp;<span class="kwd">ref </span><a href="../../libdominator/Dominator/Dominator.html"><span class="typ">Dominator</span></a> <span class="pln">dom</span><span class="pun">,</span>
+								<br/>
+&nbsp;&nbsp;<a href="../../libdominator/Node/Node.html"><span class="typ">Node</span></a> <span class="pln">node</span><span class="pun">,</span>
+								<br/>
+&nbsp;&nbsp;<span class="typ">string</span><span class="pun">[]</span> <span class="pln">optOutItems</span>
+								<br/>
+<span class="pun">)</span><span class="pun">;</span>
+							</code>
+						</div>
+					</section>
+<section><h3>Parameters</h3>
+<table><col class="caption"><tr><th>Name</th><th>Description</th></tr>
+<tr><td id="dom">dom</td><td> The DOM Object</td></tr>
+<tr><td id="node">node</td><td> A node, that is part of dom</td></tr>
+<tr><td id="optOutItems">optOutItems</td><td> Defines the output contents</td></tr>
+</table>
+</section>
+
+			</section>
+			<section>
+				<h2>Authors</h2>
+
+			</section>
+			<section>
+				<h2>Copyright</h2>
+<p>(C) 2016 Martin Brzenska
+</p>
+
+			</section>
+			<section>
+				<h2>License</h2>
+<p>Distributed under the terms of the MIT license.
+ Consult the provided LICENSE.md file for details
+</p>
+
+			</section>
+		</div>
+	</body>
+</html>
