@@ -14,6 +14,11 @@ import std.conv : to;
 import libdominator.Attribute;
 import libdominator.Node;
 
+version(unittest) {
+    import libdominator.Filter;
+    import std.file;
+}
+
 static Regex!char rNodeHead;
 static Regex!char rAttrib;
 static Regex!char rComment;
@@ -177,8 +182,10 @@ class Dominator
                 foreach (mTerminatorCandi; matchAll(this.haystack[node.getStartPosition() .. $],
                         regex(`<[\s]*/` ~ node.getTag() ~ `[\s]*>`,"i")))
                 {
-                    terminators[node.getTag()] ~= terminator(node.getStartPosition() + to!uint(mTerminatorCandi.pre()
-                            .length), to!ushort(mTerminatorCandi.front.length));
+                    terminators[node.getTag()] ~= terminator(
+                        node.getStartPosition() + to!uint(mTerminatorCandi.pre().length),
+                        to!ushort(mTerminatorCandi.front.length)
+                    );
                 }
                 if (node.getTag() !in terminators)
                 {
@@ -312,26 +319,41 @@ class Dominator
                 node.getStartPosition() + node.getStartTagLength()) .. (node.getEndPosition())] : "";
     }
 
-    /*
-    public string getInnerStrip(Node node) {
-        string result;
-
-        //size_t[size_t]
-
-        for(
-            size_t cursor = node.getStartPosition + node.getStartTagLength;
-            cursor < node.getEndPosition;
-            cursor++
-        ) {
-
-        }
-    }
+    /**
+    * Removes tags and returns plain inner content
     */
-}
+    public string stripTags(Node node) {
+        import std.algorithm.searching : any;
+        string inner;
+        Node[] descendants = node.getDescendants();
+        for(size_t i = node.getStartPosition + node.getStartTagLength ; i < node.getEndPosition ; i++) {
+            if( !
+                any!(desc =>
+                isBetween(i , desc.getStartPosition()-1 , desc.getStartPosition()+desc.getStartTagLength())
+                || isBetween(i , desc.getEndPosition()-1 , desc.getEndPosition()+desc.getEndTagLength())
+                )(descendants)
+            ) {
+                inner ~= this.haystack[i];
+            }
+        }
+        return inner;
+    }
 
-version(unittest) {
-    import libdominator.Filter;
-    import std.file;
+    /**
+    * Removes tags and returns plain inner content
+    */
+    public string stripTags() {
+        if( ! this.nodes.length) {
+            return "";
+        }
+        return this.stripTags((*this.nodes.ptr));
+    }
+    ///
+    unittest {
+        const string content = `<div><h2>bla</h2><p>fasel</p></div>`;
+        Dominator dom = new Dominator(content);
+        assert( dom.stripTags() == "blafasel");
+    }
 }
 
 unittest {
