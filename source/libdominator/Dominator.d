@@ -207,12 +207,17 @@ class Dominator
             {
                 if (terminatorCandi.position in arrTerminatorBlacklist)
                 {
+                    //skip if already checked and marked as a false candidate
                     continue;
                 }
                 if (node.getStartPosition() > terminatorCandi.position)
                 {
+                    /*
+                    * The candidates position is lower then the position of the node, for which we are searching the terminator.
+                    * This means, that the last candidate, that we have checked, was the right one - if there was one.
+                    */
                     arrTerminatorBlacklist[_lastTerm.position] = true;
-                    node.setEndPosition(_lastTerm.position).setEndTagLength(0);
+                    node.setEndPosition(_lastTerm.position).setEndTagLength(_lastTerm.length);
                     isTerminated = true;
                     break;
                 }
