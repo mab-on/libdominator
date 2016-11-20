@@ -14,6 +14,11 @@ import std.conv : to ;
 
 import libdominator;
 
+version(unittest) {
+    import libdominator.Filter;
+    import std.file;
+}
+
 ///Represents a node in a DOM
 class Node {
   private string tag;
@@ -100,6 +105,20 @@ class Node {
   /// ditto
   public ushort getEndTagLength() {
     return this.endTagLength;
+  }
+  unittest {
+    const string content = `<ol id="ol-1">
+          <li id="li-1-ol-1">list Inner</li>
+          <li id="li-2-ol-1">list Inner</li >
+          <li id="li-3-ol-1"> list Inner < /li>
+          <li id="li-4-ol-1"> list Inner < /li >
+        </ol>`;
+      Dominator dom = new Dominator(content);
+      Node[] liNodes = dom.filterDom(DomFilter("li"));
+      assert(liNodes[0].getEndTagLength == 5 );
+      assert(liNodes[1].getEndTagLength == 6 );
+      assert(liNodes[2].getEndTagLength == 6 );
+      assert(liNodes[3].getEndTagLength == 7 );
   }
 
   ///Markes this node to be inside of a comment
