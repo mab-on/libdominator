@@ -54,6 +54,9 @@ string[] nodeOutputItems(ref Dominator dom, Node node, string[] optOutItems)
       case "element-inner":
         columns ~= dom.getInner(node);
       break;
+      case "element-strip":
+        columns ~= dom.stripTags(node);
+      break;
       case "attrib-keys":
         columns ~= join(map!(a => a.key)(node.getAttributes()),",");
       break;
