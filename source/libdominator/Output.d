@@ -31,35 +31,33 @@ string[] nodeOutputItems(ref Dominator dom, Node node, string[] optOutItems)
   string[] columns;
   foreach(string optOutItem ; optOutItems)
   {
-    switch(optOutItem)
+    columns ~= nodeOutputItem(dom , node , optOutItem);
+  }
+  return columns;
+}
+
+string nodeOutputItem(ref Dominator dom, Node node, string optOutItem)
+{
+  switch(optOutItem)
     {
       case "tag":
-        columns ~= node.getTag();
-      break;
+        return node.getTag();
       case "element":
-        columns ~= dom.getElelment(node);
-      break;
+        return dom.getElelment(node);
       case "element-opener":
-        columns ~= dom.getStartElement(node);
-        break;
+        return dom.getStartElement(node);
       case "element-length":
-        columns ~= to!string(node.getStartTagLength());
-      break;
+        return to!string(node.getStartTagLength());
       case "element-start":
-        columns ~= to!string(node.getStartPosition());
-      break;
+        return to!string(node.getStartPosition());
       case "element-end":
-        columns ~= to!string(node.getEndPosition());
-      break;
+        return to!string(node.getEndPosition());
       case "element-inner":
-        columns ~= dom.getInner(node);
-      break;
+        return dom.getInner(node);
       case "element-strip":
-        columns ~= dom.stripTags(node);
-      break;
+        return dom.stripTags(node);
       case "attrib-keys":
-        columns ~= join(map!(a => a.key)(node.getAttributes()),",");
-      break;
+        return join(map!(a => a.key)(node.getAttributes()),",");
       default:
         /*
         * some CLI-Arguments are parametrized, lets check them
@@ -74,17 +72,12 @@ string[] nodeOutputItems(ref Dominator dom, Node node, string[] optOutItems)
             {
               keyvalues ~= fAttrib.values;
             }
-            columns ~= join(keyvalues, ",");
+            return join(keyvalues, ",");
           }
         }
-        else {
-          /*
-          * If no "OutItem" matches, output he input right away.
-          */
-          columns ~= optOutItem;
-        }
-      break;
+        /*
+        * If no "OutItem" matches, output he input right away.
+        */
+        return optOutItem;
     }
-  }
-  return columns;
 }
