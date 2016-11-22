@@ -324,7 +324,8 @@ class Dominator
     */
     public string stripTags(Node node) {
         import std.algorithm.searching : any;
-        string inner;
+        import std.array : appender;
+        auto inner = appender!string();
         Node[] descendants = node.getDescendants();
         for(size_t i = node.getStartPosition + node.getStartTagLength ; i < node.getEndPosition ; i++) {
             if( !
@@ -333,10 +334,10 @@ class Dominator
                 || isBetween(i , desc.getEndPosition()-1 , desc.getEndPosition()+desc.getEndTagLength())
                 )(descendants)
             ) {
-                inner ~= this.haystack[i];
+                inner.put(this.haystack[i]);
             }
         }
-        return inner;
+        return inner.data;
     }
 
     /**
