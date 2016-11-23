@@ -2,8 +2,8 @@
  * Copyright:
  * (C) 2016 Martin Brzenska
  *
- * License: 
- * Distributed under the terms of the MIT license. 
+ * License:
+ * Distributed under the terms of the MIT license.
  * Consult the provided LICENSE.md file for details
  */
 module libdominator.Filter;
@@ -29,7 +29,7 @@ struct DomFilter {
     import std.array : split;
     TagElement[] elements;
     size_t i;
-    
+
     /**
     * A dominator specific array of filter expressions
     */
@@ -47,12 +47,12 @@ struct DomFilter {
     {
         this.addExpression(expression);
     }
-    
+
     private void addExpression(string expression)
     {
         foreach(capt ; matchAll(expression, rDomFilterExpression) ) {
             TagElement tagElement;
-            
+
             capt.popFront();
             tagElement.name = capt.front;
             capt.popFront();
@@ -75,7 +75,7 @@ struct DomFilter {
                 }
             }
             capt.popFront();
-            if( ! capt.empty && capt.front.length) {    
+            if( ! capt.empty && capt.front.length) {
                 tagElement.attribs = parseAttributexpression(capt.front);
             }
             this.elements ~= tagElement;
@@ -116,7 +116,7 @@ struct DomFilter {
         }
         return false;
     }
-    
+
     /**
     * The current TagElement, which is under the cursor.
     * if there is no TagElement, then a empty TagElement will be returned.
@@ -124,12 +124,12 @@ struct DomFilter {
     TagElement front() {
         return this.elements.length ? this.elements[this.i] : TagElement() ;
     }
-    
+
     ///The number of following TagElements after the current TagElement
     size_t followers() {
         return this.elements.length == 0 ? 0 : this.elements.length - 1 - this.i;
     }
-    
+
     ///opApply on TagElements
     int opApply(int delegate(ref TagElement) dg)
     {
@@ -144,20 +144,20 @@ struct DomFilter {
         }
         return result;
     }
-    
+
     /**
     * Checks if there are any TagElements.
     * in other words: Checks if the DomFilter is loaded with some filterarguments or not.
-    */  
+    */
     bool empty() { return this.elements.length == 0; }
-    
+
     unittest {
         DomFilter filter;
         assert(filter.empty == true);
-        
+
         filter = DomFilter("p");
         assert(filter.elements == [TagElement(FilterPicktype.list, [], "p", [])]);
-        
+
         filter = DomFilter("p[1,2]");
         assert(filter.elements == [TagElement(FilterPicktype.list, [1, 2], "p", [])]);
 
@@ -169,15 +169,15 @@ struct DomFilter {
 
         filter = DomFilter("div.*.p[1..$]{class:MyClass}");
         assert(filter.elements == [
-            TagElement(FilterPicktype.list, [], "div", []), 
-            TagElement(FilterPicktype.list, [], "*", []), 
+            TagElement(FilterPicktype.list, [], "div", []),
+            TagElement(FilterPicktype.list, [], "*", []),
             TagElement(FilterPicktype.range, [1, 0], "p", [Attribute("class", ["MyClass"])])
         ]);
 
         filter = DomFilter("div.a{id:myID}.p[1..$]{class:MyClass}");
         assert(filter.elements == [
-            TagElement(FilterPicktype.list, [], "div", []), 
-            TagElement(FilterPicktype.list, [], "a", [Attribute("id", ["myID"])]), 
+            TagElement(FilterPicktype.list, [], "div", []),
+            TagElement(FilterPicktype.list, [], "a", [Attribute("id", ["myID"])]),
             TagElement(FilterPicktype.range, [1, 0], "p", [Attribute("class", ["MyClass"])])
         ]);
     }
@@ -195,7 +195,7 @@ struct TagElement
     ushort[] picks;
     string name;
     Attribute[] attribs;
-    
+
     ///checks if the TagElement matches the given pick
     bool has(size_t pick)
     {
@@ -206,8 +206,8 @@ struct TagElement
         if(this.picktype == FilterPicktype.range) {
             if(this.picks[1] == 0 && this.picks[0] <= pick) { return true; }
             else if(isBetween(pick , this.picks[0] , this.picks[1])) { return true; }
-        } 
-        else 
+        }
+        else
         {
             foreach (size_t i; picks)
             {
@@ -231,7 +231,7 @@ Node[] filterDom(Dominator dom , DomFilter[] expressions) {
     return dom.getNodes().filterDom(expressions);
 }
 
-///Filters the given Nodes and returns the nodes, that matches the given filter expressions
+///Filters the given nodes and returns the nodes, that matches the given filter expressions
 Node[] filterDom(Node[] nodes , DomFilter[] expressions) {
     if(expressions.length == 0) {return nodes;}
     Node[] resultNodes;
@@ -241,7 +241,7 @@ Node[] filterDom(Node[] nodes , DomFilter[] expressions) {
     return resultNodes;
 }
 
-///Filters the given Nodes and returns the nodes, that matches the given filter expression
+///Filters the given nodes and returns the nodes, that matches the given filter expression
 Node[] filterDom(Node[] nodes , DomFilter exp) {
     if(exp.empty) { return nodes; }
     Node[] resultNodes;
@@ -249,10 +249,10 @@ Node[] filterDom(Node[] nodes , DomFilter exp) {
     bool attribMatch;
     foreach(Node node ; nodes) {
         if(
-            exp.followers 
-            && node.hasChildren() 
-            && ( exp.front.name == node.getTag() || exp.front.name == "*" ) 
-            && exp.front.has(++hit) 
+            exp.followers
+            && node.hasChildren()
+            && ( exp.front.name == node.getTag() || exp.front.name == "*" )
+            && exp.front.has(++hit)
         ) {
             if( exp.front.attribs.length ) {
                 attribMatch = false;
@@ -264,7 +264,7 @@ Node[] filterDom(Node[] nodes , DomFilter exp) {
                 }
                 if( ! attribMatch) { continue; }
             }
-            
+
             DomFilter cExp = exp;
             cExp.next;
             resultNodes ~= filterDom(node.getChildren() , cExp);
@@ -287,18 +287,13 @@ Node[] filterDom(Node[] nodes , DomFilter exp) {
 }
 
 /**
- throws the Nodes away which are inside of a comment
+ throws the nodes away which are inside of a comment
  Returns:
   Node[]
 */
 Node[] filterComments(Node[] nodes) {
-    Node[] resultNodes;
-    foreach(node ; nodes) {
-        if(!node.isComment()) { 
-            resultNodes ~= node;
-        }
-    }
-    return resultNodes;
+    import std.algorithm.mutation : remove;
+    return remove!(n => n.isComment())(nodes);
 }
 
 /**
