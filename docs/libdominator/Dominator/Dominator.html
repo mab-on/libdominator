@@ -171,7 +171,7 @@ $('#symbolSearchPane').show();
 <section><h3>Example</h3>
 <p>get descendants of a specific Node and apply further filtering on the result.
 </p>
-<pre class="code"><code class="lang-d"><span class="kwd">const </span><span class="typ">string </span><span class="pln">content </span><span class="pun">= </span><span class="str">`&lt;div data-function="&gt;"&gt;
+<pre class="code"><code class="lang-d"><span class="kwd">const </span><span class="typ">string </span><span class="pln">content </span><span class="pun">= </span><span class="str">`&lt;div data-function="&lt;some weird&gt; stuff"&gt;
     &lt;span&gt;
         &lt;span&gt;
             &lt;span&gt;bäm!&lt;/span&gt;
@@ -184,11 +184,58 @@ $('#symbolSearchPane').show();
       &lt;li id="li-3-ol-1"&gt;li-3-ol-1 Inner&lt;/li&gt;
     &lt;/ol&gt;
   &lt;/div&gt;`</span><span class="pun">;
+
   </span><span class="typ">Dominator </span><span class="pln">dom </span><span class="pun">= </span><span class="kwd">new </span><span class="typ">Dominator</span><span class="pun">(</span><span class="pln">content</span><span class="pun">);
-  </span><span class="typ">Node </span><span class="pun">[] </span><span class="pln">descendants </span><span class="pun">= (*</span><span class="pln">dom<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="typ">DomFilter</span><span class="pun">(</span><span class="str">"div"</span><span class="pun">))<wbr/>.</span><span class="pln">ptr</span><span class="pun">)<wbr/>.</span><span class="pln">getDescendants</span><span class="pun">();
-  </span><span class="kwd">assert</span><span class="pun">( </span><span class="pln">descendants<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="typ">DomFilter</span><span class="pun">(</span><span class="str">"span"</span><span class="pun">))<wbr/>.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">4 </span><span class="pun">);
-  </span><span class="kwd">assert</span><span class="pun">( </span><span class="pln">descendants<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="typ">DomFilter</span><span class="pun">(</span><span class="str">"li"</span><span class="pun">))<wbr/>.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">3 </span><span class="pun">);
-  </span><span class="kwd">assert</span><span class="pun">( </span><span class="pln">descendants<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="typ">DomFilter</span><span class="pun">(</span><span class="str">"ol"</span><span class="pun">))<wbr/>.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">1 </span><span class="pun">);
+  </span><span class="typ">Node </span><span class="pun">[] </span><span class="pln">descendants </span><span class="pun">= (*</span><span class="pln">dom<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="str">"div"</span><span class="pun">)<wbr/>.</span><span class="pln">ptr</span><span class="pun">)<wbr/>.</span><span class="pln">getDescendants</span><span class="pun">();
+  </span><span class="kwd">assert</span><span class="pun">( </span><span class="pln">descendants<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="str">"span"</span><span class="pun">)<wbr/>.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">4 </span><span class="pun">);
+  </span><span class="kwd">assert</span><span class="pun">( </span><span class="pln">descendants<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="str">"li"</span><span class="pun">)<wbr/>.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">3 </span><span class="pun">);
+  </span><span class="kwd">assert</span><span class="pun">( </span><span class="pln">descendants<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="str">"ol"</span><span class="pun">)<wbr/>.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">1 </span><span class="pun">);
+</span></code></pre>
+</section>
+<section><h3>Example</h3>
+<p>basic example
+</p>
+<pre class="code"><code class="lang-d"><span class="kwd">const </span><span class="typ">string </span><span class="pln">html </span><span class="pun">=
+</span><span class="str">`&lt;div&gt;
+    &lt;p&gt;Here comes a list!&lt;/p&gt;
+    &lt;ul&gt;
+        &lt;li class="wanted"&gt;one&lt;/li&gt;
+        &lt;!-- &lt;li&gt;two&lt;/li&gt; --&gt;
+        &lt;li class="wanted hard"&gt;three&lt;/li&gt;
+        &lt;li id="item-4"&gt;four&lt;/li&gt;
+        &lt;li checked&gt;five&lt;/li&gt;
+        &lt;li id="item-6"&gt;six&lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;p&gt;another list&lt;/p&gt;
+    &lt;ol&gt;
+        &lt;li&gt;eins&lt;/li&gt;
+        &lt;li&gt;zwei&lt;/li&gt;
+        &lt;li&gt;drei&lt;/li&gt;
+    &lt;ol&gt;
+    &lt;p&gt;have a nice day&lt;/p&gt;
+&lt;/div&gt;`</span><span class="pun">;
+</span><span class="typ">Dominator </span><span class="pln">dom </span><span class="pun">= </span><span class="kwd">new </span><span class="typ">Dominator</span><span class="pun">(</span><span class="pln">html</span><span class="pun">);
+
+</span><span class="kwd">foreach</span><span class="pun">(</span><span class="pln">node </span><span class="pun">; </span><span class="pln">dom<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="str">"ul.li"</span><span class="pun">)) {
+    </span><span class="com">//do something more usefull with the node then:
+    </span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">node<wbr/></span><span class="pun">.</span><span class="pln">getParent<wbr/></span><span class="pun">.</span><span class="pln">getTag</span><span class="pun">() == </span><span class="str">"ul"</span><span class="pun">);
+}
+
+</span><span class="typ">Node</span><span class="pun">[] </span><span class="pln">nodes </span><span class="pun">= </span><span class="pln">dom<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="str">"ul.li"</span><span class="pun">);
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">dom<wbr/></span><span class="pun">.</span><span class="pln">getInner</span><span class="pun">( </span><span class="pln">nodes</span><span class="pun">[</span><span class="lit">0</span><span class="pun">] ) == </span><span class="str">"one" </span><span class="pun">);
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">nodes</span><span class="pun">[</span><span class="lit">0</span><span class="pun">]<wbr/>.</span><span class="pln">getAttributes</span><span class="pun">() == [ </span><span class="typ">Attribute</span><span class="pun">(</span><span class="str">"class"</span><span class="pun">,</span><span class="str">"wanted"</span><span class="pun">) ] );
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="typ">Attribute</span><span class="pun">(</span><span class="str">"class"</span><span class="pun">,</span><span class="str">"wanted"</span><span class="pun">)<wbr/>.</span><span class="pln">matches</span><span class="pun">(</span><span class="pln">nodes</span><span class="pun">[</span><span class="lit">0</span><span class="pun">]));
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="typ">Attribute</span><span class="pun">(</span><span class="str">"class"</span><span class="pun">,</span><span class="str">"wanted"</span><span class="pun">)<wbr/>.</span><span class="pln">matches</span><span class="pun">(</span><span class="pln">nodes</span><span class="pun">[</span><span class="lit">2</span><span class="pun">]));
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="typ">Attribute</span><span class="pun">(</span><span class="str">"class"</span><span class="pun">,[</span><span class="str">"wanted"</span><span class="pun">,</span><span class="str">"hard"</span><span class="pun">])<wbr/>.</span><span class="pln">matches</span><span class="pun">(</span><span class="pln">nodes</span><span class="pun">[</span><span class="lit">2</span><span class="pun">]));
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">nodes</span><span class="pun">[</span><span class="lit">1</span><span class="pun">]<wbr/>.</span><span class="pln">isComment</span><span class="pun">());
+
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">dom<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="str">"ul.li"</span><span class="pun">)<wbr/>.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">6</span><span class="pun">);
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">dom<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="str">"ul.li"</span><span class="pun">)<wbr/>.</span><span class="pln">filterComments<wbr/></span><span class="pun">.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">5</span><span class="pun">);
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">dom<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="str">"li"</span><span class="pun">)<wbr/>.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">9</span><span class="pun">);
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">dom<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="str">"li[1]"</span><span class="pun">)<wbr/>.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">1</span><span class="pun">); </span><span class="com">//the first li in the dom
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">dom<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="str">"*.li[1]"</span><span class="pun">)<wbr/>.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">2</span><span class="pun">); </span><span class="com">//the first li in ul and first li in ol
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">dom<wbr/></span><span class="pun">.</span><span class="pln">getInner</span><span class="pun">( (*</span><span class="pln">dom<wbr/></span><span class="pun">.</span><span class="pln">filterDom</span><span class="pun">(</span><span class="str">"*{checked:}"</span><span class="pun">)<wbr/>.</span><span class="pln">ptr</span><span class="pun">) ) == </span><span class="str">"five"</span><span class="pun">);
+
 </span></code></pre>
 </section>
 
