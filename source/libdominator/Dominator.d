@@ -40,7 +40,7 @@ struct terminator
     ushort length;
 }
 
-bool isBetween(size_t needle, size_t from, size_t to)
+bool isBetween(in size_t needle, in size_t from, in size_t to)
 {
     return (needle > from && needle < to);
 }
@@ -48,7 +48,6 @@ bool isBetween(size_t needle, size_t from, size_t to)
 ///Parse, hierarchize, analyse xhtml
 class Dominator
 {
-    //private auto rComment = regex(`<!--.*?-->`, "s");
     private string haystack;
     private comment[] comments;
 
@@ -133,7 +132,7 @@ class Dominator
             );
 
             //check if this node is inside of a comment - if yes, mark it.
-            foreach (comment cmnt; this.comments)
+            foreach (ref comment cmnt; this.comments)
             {
                 if (isBetween(node.getStartPosition(), cmnt.begin, cmnt.end))
                 {
