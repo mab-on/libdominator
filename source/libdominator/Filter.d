@@ -225,6 +225,10 @@ struct TagElement
 Node[] filterDom(Dominator dom , DomFilter expressions) {
     return filterDom(dom,[expressions]);
 }
+///ditto
+Node[] filterDom(Dominator dom , string expressions) {
+    return filterDom(dom,[DomFilter(expressions)]);
+}
 
 ///Filters the given DOM and returns the nodes, that matches the given filter expressions
 Node[] filterDom(Dominator dom , DomFilter[] expressions) {
@@ -284,6 +288,10 @@ Node[] filterDom(Node[] nodes , DomFilter exp) {
         }
     }
     return resultNodes;
+}
+///ditto
+Node[] filterDom(Node[] nodes , string expression) {
+    return filterDom(nodes , DomFilter(expression));
 }
 
 /**

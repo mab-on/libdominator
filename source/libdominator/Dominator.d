@@ -373,7 +373,7 @@ unittest {
 
 /// get descendants of a specific Node and apply further filtering on the result.
 unittest {
-    const string content = `<div data-function=">">
+    const string content = `<div data-function="<some weird> stuff">
         <span>
             <span>
                 <span>bäm!</span>
@@ -386,52 +386,78 @@ unittest {
           <li id="li-3-ol-1">li-3-ol-1 Inner</li>
         </ol>
       </div>`;
+
       Dominator dom = new Dominator(content);
-      Node [] descendants = (*dom.filterDom(DomFilter("div")).ptr).getDescendants();
-      assert( descendants.filterDom(DomFilter("span")).length == 4 );
-      assert( descendants.filterDom(DomFilter("li")).length == 3 );
-      assert( descendants.filterDom(DomFilter("ol")).length == 1 );
+      Node [] descendants = (*dom.filterDom("div").ptr).getDescendants();
+      assert( descendants.filterDom("span").length == 4 );
+      assert( descendants.filterDom("li").length == 3 );
+      assert( descendants.filterDom("ol").length == 1 );
+}
+
+/// basic example
+unittest {
+    const string html =
+    `<div>
+        <p>Here comes a list!</p>
+        <ul>
+            <li class="wanted">one</li>
+            <!-- <li>two</li> -->
+            <li class="wanted hard">three</li>
+            <li id="item-4">four</li>
+            <li checked>five</li>
+            <li id="item-6">six</li>
+        </ul>
+        <p>another list</p>
+        <ol>
+            <li>eins</li>
+            <li>zwei</li>
+            <li>drei</li>
+        <ol>
+        <p>have a nice day</p>
+    </div>`;
+    Dominator dom = new Dominator(html);
+
+    foreach(node ; dom.filterDom("ul.li")) {
+        //do something more usefull with the node then:
+        assert(node.getParent.getTag() == "ul");
+    }
+
+    Node[] nodes = dom.filterDom("ul.li");
+    assert(dom.getInner( nodes[0] ) == "one" );
+    assert(nodes[0].getAttributes() == [ Attribute("class","wanted") ] );
+    assert(Attribute("class","wanted").matches(nodes[0]));
+    assert(Attribute("class","wanted").matches(nodes[2]));
+    assert(Attribute("class",["wanted","hard"]).matches(nodes[2]));
+    assert(nodes[1].isComment());
+
+    assert(dom.filterDom("ul.li").length == 6);
+    assert(dom.filterDom("ul.li").filterComments.length == 5);
+    assert(dom.filterDom("li").length == 9);
+    assert(dom.filterDom("li[1]").length == 1); //the first li in the dom
+    assert(dom.filterDom("*.li[1]").length == 2); //the first li in ul and first li in ol
+    assert(dom.getInner( (*dom.filterDom("*{checked:}").ptr) ) == "five");
+
 }
 
 unittest {
-    import std.conv : to;
     Dominator dom = new Dominator(readText("dummy.html"));
     auto filter = DomFilter("article");
-    assert( dom.filterDom(filter).filterComments().length == 3 , to!(string)(dom.filterDom(filter).filterComments().length) );
-    assert( dom.filterDom(filter).length == 6 , to!(string)(dom.filterDom(filter).length));
+    assert( dom.filterDom(filter).filterComments().length == 3);
+    assert( dom.filterDom(filter).length == 6);
 
-    filter = DomFilter("div.*.ol.li");
-    assert( dom.filterDom(filter).length == 3 );
-
-    filter = DomFilter("div.ol.li");
-    assert( dom.filterDom(filter).length == 6 );
-
-    filter = DomFilter("ol.li");
-    assert( dom.filterDom(filter).length == 6 );
-
-    filter = DomFilter(`ol.li{id:(regex)^li-[\d]+}`);
-    assert( dom.filterDom(filter).length == 6 );
-
-    filter = DomFilter(`ol{id:ol-1}.li{id:(regex)^li-[\d]+}`);
-    assert( dom.filterDom(filter).length == 3 );
-
-    filter = DomFilter(`*{checked:}`);
-    assert( dom.filterDom(filter).length == 1 );
-
-    filter = DomFilter(`onelinenested`);
-    assert( dom.filterDom(filter).length == 2 );
-
-    filter = DomFilter(`onelinenested{class:level1}`);
-    assert( dom.filterDom(filter).length == 1 );
-
-    filter = DomFilter(`onelinenested{class:level2}`);
-    assert( dom.filterDom(filter).length == 1 );
-
-    filter = DomFilter(`onelinenested.onelinenested`);
-    assert( dom.filterDom(filter).length == 1 );
+    assert( dom.filterDom("div.*.ol.li").length == 3 );
+    assert( dom.filterDom("div.ol.li").length == 6 );
+    assert( dom.filterDom("ol.li").length == 6 );
+    assert( dom.filterDom(`ol.li{id:(regex)^li-[\d]+}`).length == 6 );
+    assert( dom.filterDom(`ol{id:ol-1}.li{id:(regex)^li-[\d]+}`).length == 3 );
+    assert( dom.filterDom(`*{checked:}`).length == 1 );
+    assert( dom.filterDom(`onelinenested`).length == 2 );
+    assert( dom.filterDom(`onelinenested{class:level1}`).length == 1 );
+    assert( dom.filterDom(`onelinenested{class:level2}`).length == 1 );
+    assert( dom.filterDom(`onelinenested.onelinenested`).length == 1 );
 
     /**
-    * Find the nodes with a special href.
+    * Find nodes with a special href.
     */
     filter = DomFilter(`*{href:https://www.google.com/support/contact/user?hl=en}`);
     assert( dom.filterDom(filter).length);
@@ -440,7 +466,7 @@ unittest {
     }
 
     /**
-    * Find the nodes with a special href - In HTML5 it is ok to have attribute-values without quotation marks.
+    * Find nodes with a special href - In HTML5 it is ok to have attribute-values without quotation marks.
     */
     filter = DomFilter(`*{href://www.google.com/}`);
     assert( dom.filterDom(filter).length);
