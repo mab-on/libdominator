@@ -78,38 +78,178 @@ class Dominator
         return this;
     }
 
-    private size_t findNodesLenth(size_t nodeHeadPos) {
-        size_t len;
+    /**
+    *
+    */
+    private bool finalizeElementOpener(ref Node node) {
+        import std.ascii : isWhite , isAlphaNum , isAlpha;
+
+        enum ParserStates : ubyte {
+            name = 1,
+            key = 2,
+            value = 4,
+            err = 8,
+            ready = 16
+        }
+        ubyte state = 0;
+
         char inQuote = 0x00;
-        while(this.haystack.length > nodeHeadPos + len)
-        {
+        size_t[2] nameCoord, keyCoord, valCoord;
+        size_t needle = node.getStartPosition();
+
+        if(this.haystack[needle] != '<') {
+            return false;
+        }
+        needle++;
+
+        /*
+        * parse the elements name
+        */
+        //first, skip whitespaces
+        while(this.haystack[needle].isWhite) { needle++; }
+
+        //The name begins with a underscore or a alphabetical character.
+        if(
+            ! this.haystack[needle].isAlpha
+            && ! this.haystack[needle] == '_'
+        ) {
+            return false;
+        }
+        nameCoord[0] = needle;
+
+        //The name can contain letters, digits, hyphens, underscores, and periods
+
+        for(; !this.haystack[needle].isWhite ; ++needle) {
             if(
-                this.haystack[nodeHeadPos + len] == '>'
-                && inQuote == 0x00
+                ! this.haystack[needle].isAlphaNum
+                &&  this.haystack[needle] != '-'
+                &&  this.haystack[needle] != '_'
+                &&  this.haystack[needle] != '.'
+                &&  this.haystack[needle] != ':'
             ) {
-                return 1+len;
-            }
-            len++;
-            if(
-                this.haystack[nodeHeadPos + len] == inQuote
-                && this.haystack[nodeHeadPos + len -1] != '\\'
-            ) {
-                inQuote = 0x00;
-            }
-            else if(
-                inQuote == 0x00
-                && (this.haystack[nodeHeadPos + len] == '\''
-                || this.haystack[nodeHeadPos + len] == '"')
-            ) {
-                inQuote = this.haystack[nodeHeadPos + len];
+                if(this.haystack[needle] == '>') {
+                    state |= ParserStates.ready;
+                    break;
+                } else {
+                    return false;
+                }
             }
         }
-        return 1+len; //we should never get here
+        nameCoord[1] = needle;
+        state |= ParserStates.name;
+
+        /*
+        * Parse attributes
+        */
+        while( ! (state & ParserStates.ready))
+        {
+            //reset state
+            state &= ~(ParserStates.key | ParserStates.value);
+            keyCoord[0] = 0;
+            keyCoord[1] = 0;
+            valCoord[0] = 0;
+            valCoord[1] = 0;
+
+            //Check if the next non-whitespace char finishes our job here
+            while(this.haystack[needle].isWhite){ needle++; }
+            if(this.haystack[needle] == '>') {
+                state |= ParserStates.ready;
+                break;
+            }
+            /*
+            * Find the attr-key
+            */
+            keyCoord[0] = needle;
+            for(; !this.haystack[needle].isWhite ; ++needle) {
+                if(this.haystack[needle] == '>') {
+                    state |= ParserStates.ready;
+                    break;
+                }
+                if(this.haystack[needle] == '=') {
+                    break;
+                }
+            }
+            keyCoord[1] = needle;
+
+            if(state & ParserStates.ready) {
+                node.addAttribute( Attribute(this.haystack[keyCoord[0]..keyCoord[1]] , "" ) );
+            }
+            else {
+                /**
+                * Parse attribute value if exist
+                */
+
+                //skip whitespaces
+                while(this.haystack[needle].isWhite) { needle++; }
+
+                if(this.haystack[needle] == '>') {
+                    //there is no value and this is the end
+                    state |= ParserStates.ready;
+                    node.addAttribute( Attribute(this.haystack[keyCoord[0]..keyCoord[1]] , "" ) );
+                }
+                else if(this.haystack[needle] == '=')
+                {
+                    //here comes the value...
+                    needle++;
+                    while(this.haystack[needle].isWhite) { needle++; }
+                    if(this.haystack[needle] == '"' || this.haystack[needle] == '\'' ) {
+                        //quoted value
+                        inQuote = this.haystack[needle];
+                        needle++;
+                        valCoord[0] = needle;
+                        while(
+                            this.haystack[needle] != inQuote
+                            || ( this.haystack[needle] == inQuote && this.haystack[needle-1] == '\\')
+                        ) {
+                            needle++;
+                        }
+                        valCoord[1] = needle;
+                        needle++;
+                    }
+                    else {
+                        //not quoted value
+                        inQuote = 0x00;
+                        valCoord[0] = needle;
+                        while(
+                            ! this.haystack[needle].isWhite
+                            || ( this.haystack[needle].isWhite && this.haystack[needle-1] == '\\')
+                        ) {
+                            if(this.haystack[needle] == '>') {
+                                state |= ParserStates.ready;
+                                break;
+                            }
+                            needle++;
+                        }
+                        if(state & ParserStates.ready) {
+                            valCoord[1] = needle;
+                        }
+                        else {
+                            valCoord[1] = needle;
+                            needle++;
+                        }
+                    }
+                }
+                else {
+                    //there is no value
+                }
+                node.addAttribute(Attribute(
+                    this.haystack[keyCoord[0]..keyCoord[1]],
+                    this.haystack[valCoord[0]..valCoord[1]]
+                ));
+            }
+        }
+        node.setStartTagLength( 1 + needle - node.getStartPosition() );
+        return true;
     }
 
     private void parse()
     {
         import std.string : chomp, chompPrefix;
+        import std.array : appender;
+
+        Node[] nodes;
+        auto nodeAppender = appender(nodes);
+
         foreach (mComment; matchAll(this.haystack, rComment))
         {
             this.comments ~= comment(to!uint(mComment.pre().length),
@@ -127,9 +267,10 @@ class Dominator
             mNode.popFront();
             node.setTag(mNode.front)
                 .setStartPosition(mNode.pre().length);
-            node.setStartTagLength(
-                node.getTag().length + this.findNodesLenth( node.getTag().length + node.getStartPosition() )
-            );
+            if( ! this.finalizeElementOpener( node ) ) {
+                //skip this node if something didn't work out
+                continue;
+            }
 
             //check if this node is inside of a comment - if yes, mark it.
             foreach (ref comment cmnt; this.comments)
@@ -139,41 +280,6 @@ class Dominator
                     node.isComment(true);
                 }
             }
-
-            //parse the attributes, if there are one or more
-            if(
-                node.getStartPosition + mNode.hit().length + 1
-                <
-                node.getStartPosition + node.getStartTagLength() -1
-            )
-            {
-                foreach (
-                    mAttrib;
-                    matchAll(
-                        this.haystack[
-                            node.getStartPosition + mNode.hit().length + 1
-                            ..
-                            node.getStartPosition + node.getStartTagLength() -1
-                            ],
-                        rAttrib
-                    )
-                )
-                {
-                    node.addAttribute(
-                        Attribute(
-                            mAttrib[1],
-                            chompPrefix(
-                                chomp(
-                                    mAttrib[2],
-                                    mAttrib[3] ~ mAttrib[4] ~ mAttrib[5]
-                                ),
-                                mAttrib[3] ~ mAttrib[4] ~ mAttrib[5]
-                            )
-                        )
-                    );
-                }
-            }
-            this.addNode(node);
 
             //search Terminator Candidates
             if (node.getTag() !in terminators)
@@ -191,18 +297,15 @@ class Dominator
                     terminators[node.getTag()] ~= [terminator(node.getStartPosition(), 0)];
                 }
             }
+            nodeAppender.put(node);
         }
+        this.nodes = nodeAppender.data;
         this.hierarchize(terminators);
-    }
-
-    private void addNode(Node node)
-    {
-        this.nodes ~= node;
     }
 
     private void hierarchize(terminator[][string] terminators)
     {
-        import std.algorithm : sort;
+        import std.algorithm.sorting : sort;
 
         bool[size_t] arrTerminatorBlacklist;
         foreach_reverse (Node node; this.nodes)
@@ -244,13 +347,7 @@ class Dominator
             }
         }
 
-        Node[] sortedNodes;
-        foreach (node; sort!"a.getStartPosition() < b.getStartPosition()"(this.nodes))
-        {
-            sortedNodes ~= node;
-        }
-        this.nodes = sortedNodes.dup;
-        delete sortedNodes;
+        this.nodes.sort!("a.getStartPosition() < b.getStartPosition()");
 
         foreach (size_t i, Node node; this.nodes)
         {
@@ -352,7 +449,7 @@ class Dominator
     unittest {
         const string content = `<div><h2>bla</h2><p>fasel</p></div>`;
         Dominator dom = new Dominator(content);
-        assert( dom.stripTags() == "blafasel");
+        assert( dom.stripTags() == "blafasel", dom.stripTags());
     }
 }
 
@@ -424,7 +521,7 @@ unittest {
 
     Node[] nodes = dom.filterDom("ul.li");
     assert(dom.getInner( nodes[0] ) == "one" );
-    assert(nodes[0].getAttributes() == [ Attribute("class","wanted") ] );
+    assert(nodes[0].getAttributes() == [ Attribute("class","wanted") ] , to!(string)(nodes[0].getAttributes()) );
     assert(Attribute("class","wanted").matches(nodes[0]));
     assert(Attribute("class","wanted").matches(nodes[2]));
     assert(Attribute("class",["wanted","hard"]).matches(nodes[2]));
