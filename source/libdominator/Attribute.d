@@ -37,7 +37,8 @@ struct Attribute
     */
     this(string key, string[] values)
     {
-        this.key = key;
+        import std.string : toLower;
+        this.key = toLower(key);
         this.values = values;
     }
 

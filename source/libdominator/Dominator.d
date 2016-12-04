@@ -8,7 +8,6 @@
  */
 module libdominator.Dominator;
 
-import std.regex : Regex , regex, matchAll , ctRegex;
 import std.conv : to;
 
 import libdominator.Attribute;
@@ -70,9 +69,6 @@ class Dominator
         return this;
     }
 
-    /**
-    *
-    */
     private bool tryElementOpener(ref Node node, ref size_t needle) {
         import std.ascii : isWhite , isAlphaNum , isAlpha;
         enum ParserStates : ubyte {
@@ -98,7 +94,7 @@ class Dominator
         * parse the elements name
         */
         //first, skip whitespaces
-        while(this.haystack[needle].isWhite) { needle++; }
+        while(needle < this.haystack.length && this.haystack[needle].isWhite) { needle++; }
 
         //The name begins with a underscore or a alphabetical character.
         if(
@@ -110,7 +106,7 @@ class Dominator
         nameCoord = needle;
 
         //The name can contain letters, digits, hyphens, underscores, and periods
-        for(; !this.haystack[needle].isWhite ; ++needle) {
+        for(; needle < this.haystack.length && !this.haystack[needle].isWhite ; ++needle) {
             if(
                 ! this.haystack[needle].isAlphaNum
                 &&  this.haystack[needle] != '-'
@@ -138,7 +134,7 @@ class Dominator
             state &= ~(ParserStates.key | ParserStates.value);
 
             //Check if the next non-whitespace char finishes our job here
-            while(this.haystack[needle].isWhite){ needle++; }
+            while(needle < this.haystack.length && this.haystack[needle].isWhite){ needle++; }
             if(this.haystack[needle] == '>') {
                 state |= ParserStates.ready;
                 break;
@@ -147,7 +143,7 @@ class Dominator
             * Find the attr-key
             */
             keyCoord[0] = needle;
-            for(; !this.haystack[needle].isWhite ; ++needle) {
+            for(; needle < this.haystack.length && !this.haystack[needle].isWhite ; ++needle) {
                 if(this.haystack[needle] == '>') {
                     state |= ParserStates.ready;
                     break;
@@ -167,7 +163,7 @@ class Dominator
                 */
 
                 //skip whitespaces
-                while(this.haystack[needle].isWhite) { needle++; }
+                while(needle < this.haystack.length && this.haystack[needle].isWhite) { needle++; }
 
                 if(this.haystack[needle] == '>') {
                     //there is no value and this is the end
@@ -179,15 +175,16 @@ class Dominator
                 {
                     //here comes the value...
                     needle++;
-                    while(this.haystack[needle].isWhite) { needle++; }
+                    while(needle < this.haystack.length && this.haystack[needle].isWhite) { needle++; }
                     if(this.haystack[needle] == '"' || this.haystack[needle] == '\'' ) {
                         //quoted value
                         inQuote = this.haystack[needle];
                         needle++;
                         valCoord[0] = needle;
                         while(
-                            this.haystack[needle] != inQuote
-                            || ( this.haystack[needle] == inQuote && this.haystack[needle-1] == '\\')
+                            needle < this.haystack.length
+                            && (this.haystack[needle] != inQuote
+                            || ( this.haystack[needle] == inQuote && this.haystack[needle-1] == '\\'))
                         ) {
                             needle++;
                         }
@@ -199,8 +196,9 @@ class Dominator
                         inQuote = 0x00;
                         valCoord[0] = needle;
                         while(
-                            ! this.haystack[needle].isWhite
-                            || ( this.haystack[needle].isWhite && this.haystack[needle-1] == '\\')
+                            needle < this.haystack.length
+                            && (!this.haystack[needle].isWhite
+                            || ( this.haystack[needle].isWhite && this.haystack[needle-1] == '\\'))
                         ) {
                             if(this.haystack[needle] == '>') {
                                 state |= ParserStates.ready;
@@ -219,6 +217,9 @@ class Dominator
                 }
                 else {
                     //there is no value
+                }
+                if(keyCoord[1] >= this.haystack.length || valCoord[1] >= this.haystack.length) {
+                    return false;
                 }
                 node.addAttribute(Attribute(
                     this.haystack[keyCoord[0]..keyCoord[1]],
