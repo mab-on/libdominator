@@ -19,25 +19,16 @@ version(unittest) {
     import std.file;
 }
 
-static Regex!char rNodeHead;
-static Regex!char rAttrib;
-static Regex!char rComment;
-static this() {
-    rNodeHead = ctRegex!(`<[\s]*([\w\d-]+)`, "i");
-    rAttrib = ctRegex!(`([\w\d-_]+)(?:=((")(?:\\"|[^"])*"|(')(?:\\'|[^'])*'|(?:\\[\s]|[^\s])*([\s])*))?`, "i");
-    rComment = ctRegex!(`<!--.*?-->`, "s");
-}
-
 struct comment
 {
-    uint begin;
-    uint end;
+    size_t begin;
+    size_t end;
 }
 
 struct terminator
 {
-    uint position;
-    ushort length;
+    size_t position;
+    size_t length;
 }
 
 bool isBetween(in size_t needle, in size_t from, in size_t to)
@@ -49,6 +40,7 @@ bool isBetween(in size_t needle, in size_t from, in size_t to)
 class Dominator
 {
     private string haystack;
+    private size_t needle;
     private comment[] comments;
 
     private Node[] nodes;
@@ -81,9 +73,8 @@ class Dominator
     /**
     *
     */
-    private bool finalizeElementOpener(ref Node node) {
+    private bool tryElementOpener(ref Node node, ref size_t needle) {
         import std.ascii : isWhite , isAlphaNum , isAlpha;
-
         enum ParserStates : ubyte {
             name = 1,
             key = 2,
@@ -94,12 +85,13 @@ class Dominator
         ubyte state = 0;
 
         char inQuote = 0x00;
-        size_t[2] nameCoord, keyCoord, valCoord;
-        size_t needle = node.getStartPosition();
+        size_t nameCoord;
+        size_t[2] keyCoord, valCoord;
 
         if(this.haystack[needle] != '<') {
             return false;
         }
+        node.setStartPosition(needle);
         needle++;
 
         /*
@@ -115,10 +107,9 @@ class Dominator
         ) {
             return false;
         }
-        nameCoord[0] = needle;
+        nameCoord = needle;
 
         //The name can contain letters, digits, hyphens, underscores, and periods
-
         for(; !this.haystack[needle].isWhite ; ++needle) {
             if(
                 ! this.haystack[needle].isAlphaNum
@@ -135,7 +126,7 @@ class Dominator
                 }
             }
         }
-        nameCoord[1] = needle;
+        node.setTag(this.haystack[nameCoord..needle]);
         state |= ParserStates.name;
 
         /*
@@ -145,10 +136,6 @@ class Dominator
         {
             //reset state
             state &= ~(ParserStates.key | ParserStates.value);
-            keyCoord[0] = 0;
-            keyCoord[1] = 0;
-            valCoord[0] = 0;
-            valCoord[1] = 0;
 
             //Check if the next non-whitespace char finishes our job here
             while(this.haystack[needle].isWhite){ needle++; }
@@ -186,6 +173,7 @@ class Dominator
                     //there is no value and this is the end
                     state |= ParserStates.ready;
                     node.addAttribute( Attribute(this.haystack[keyCoord[0]..keyCoord[1]] , "" ) );
+                    break;
                 }
                 else if(this.haystack[needle] == '=')
                 {
@@ -242,63 +230,119 @@ class Dominator
         return true;
     }
 
+    private bool tryElementTerminator(ref terminator[][string] terminators , ref size_t needle) {
+        import std.ascii : isWhite;
+
+        if( this.haystack[needle] != '<' ) {return false;}
+
+        size_t[2] nameCoord;
+        size_t position = needle;
+
+        for(needle = needle + 1; needle < this.haystack.length && this.haystack[needle].isWhite ; needle++) {}
+        if(this.haystack[needle] != '/') { return false; }
+        nameCoord[0] = 1 + needle;
+        for(
+            needle = needle + 1 ;
+            needle < this.haystack.length
+            && !this.haystack[needle].isWhite ;
+            needle++
+        ) {
+            if(this.haystack[needle] == '>') {
+                terminators[this.haystack[nameCoord[0]..needle]] ~= terminator(position , 1 + needle - position);
+                return true;
+            }
+        }
+        nameCoord[1] = needle;
+        for(; needle < this.haystack.length && this.haystack[needle].isWhite ; needle++) {}
+        if(this.haystack[needle] == '>') {
+            terminators[this.haystack[nameCoord[0]..nameCoord[1]]] ~= terminator(position , 1 + needle - position);
+            return true;
+        }
+        return false;
+    }
+    private bool tryCommentOpener(ref size_t needle) {
+        if(
+            needle + 4 < this.haystack.length
+            && this.haystack[needle..needle+4] == "<!--"
+        ) {
+            needle = needle+4;
+            return true;
+        }
+        return false;
+    }
+    private bool tryCommentTerminator(ref size_t needle) {
+        if(
+            needle + 3 < this.haystack.length
+            && this.haystack[needle..needle+3] == "-->"
+        ) {
+            needle = needle+3;
+            return true;
+        }
+        return false;
+    }
     private void parse()
     {
-        import std.string : chomp, chompPrefix;
+        import std.ascii : isWhite , isAlphaNum , isAlpha;
         import std.array : appender;
 
+        if(this.haystack.length == 0) { return; }
         Node[] nodes;
         auto nodeAppender = appender(nodes);
-
-        foreach (mComment; matchAll(this.haystack, rComment))
-        {
-            this.comments ~= comment(to!uint(mComment.pre().length),
-                    to!uint(mComment.pre().length) + to!uint(mComment.front.length));
-        }
         terminator[][string] terminators;
-        foreach (mNode; matchAll(this.haystack, rNodeHead))
-        {
-            auto node = new Node();
-            /*
-            * We have a good candidate for a opening node.
-            * We know the beginning position (and how long the "head" is)
-            * Next, we need to find out where the opener ends.
-            */
-            mNode.popFront();
-            node.setTag(mNode.front)
-                .setStartPosition(mNode.pre().length);
-            if( ! this.finalizeElementOpener( node ) ) {
-                //skip this node if something didn't work out
-                continue;
-            }
-
-            //check if this node is inside of a comment - if yes, mark it.
-            foreach (ref comment cmnt; this.comments)
-            {
-                if (isBetween(node.getStartPosition(), cmnt.begin, cmnt.end))
-                {
-                    node.isComment(true);
-                }
-            }
-
-            //search Terminator Candidates
-            if (node.getTag() !in terminators)
-            {
-                foreach (mTerminatorCandi; matchAll(this.haystack[node.getStartPosition() .. $],
-                        regex(`<[\s]*/` ~ node.getTag() ~ `[\s]*>`,"i")))
-                {
-                    terminators[node.getTag()] ~= terminator(
-                        node.getStartPosition() + to!uint(mTerminatorCandi.pre().length),
-                        to!ushort(mTerminatorCandi.front.length)
-                    );
-                }
-                if (node.getTag() !in terminators)
-                {
-                    terminators[node.getTag()] ~= [terminator(node.getStartPosition(), 0)];
-                }
-            }
-            nodeAppender.put(node);
+        size_t needleProbe;
+        enum ParserStates : ubyte {
+            inElementOpener = 1,
+            inComment = 2
         }
+        ubyte state;
+        size_t needle;
+
+        do {
+            if(this.haystack[needle] == '<') {
+
+                needleProbe = needle;
+                if( this.tryElementTerminator(terminators , needleProbe) ) {
+                    needle = needleProbe;
+                    continue;
+                }
+
+                needleProbe = needle;
+                if(
+                    !(state & ParserStates.inComment)
+                    && this.tryCommentOpener(needleProbe)
+                ) {
+                    needle = needleProbe;
+                    state |= ParserStates.inComment;
+                    continue;
+                }
+
+                needleProbe = needle;
+                Node elem = new Node();
+                if( this.tryElementOpener(elem , needleProbe) ) {
+
+
+                    needle = needleProbe;
+                    if(state & ParserStates.inComment) {elem.isComment(true);}
+                    nodeAppender.put(elem);
+                    continue;
+                }
+
+            }
+            else if(
+                this.haystack[needle] == '-'
+                && state & ParserStates.inComment
+            ) {
+                needleProbe = needle;
+                if( this.tryCommentTerminator(needleProbe) ) {
+                    needle = needleProbe;
+                    state &= ~ParserStates.inComment;
+                    continue;
+                }
+            }
+
+            needle++;
+        } while(needle < this.haystack.length);
+
         this.nodes = nodeAppender.data;
         this.hierarchize(terminators);
     }
@@ -312,27 +356,30 @@ class Dominator
         {
             terminator _lastTerm = terminator(node.getStartPosition(), 0);
             bool isTerminated = false;
-            foreach_reverse (terminator terminatorCandi; terminators[node.getTag()])
-            {
-                if (terminatorCandi.position in arrTerminatorBlacklist)
+
+            if(node.getTag() in terminators) {
+                foreach_reverse (terminator terminatorCandi; terminators[node.getTag()])
                 {
-                    //skip if already checked and marked as a false candidate
-                    continue;
-                }
-                if (node.getStartPosition() > terminatorCandi.position)
-                {
-                    /*
-                    * The candidates position is lower then the position of the node, for which we are searching the terminator.
-                    * This means, that the last candidate, that we have checked, was the right one - if there was one.
-                    */
-                    arrTerminatorBlacklist[_lastTerm.position] = true;
-                    node.setEndPosition(_lastTerm.position).setEndTagLength(_lastTerm.length);
-                    isTerminated = true;
-                    break;
-                }
-                else
-                {
-                    _lastTerm = terminatorCandi;
+                    if (terminatorCandi.position in arrTerminatorBlacklist)
+                    {
+                        //skip if already checked and marked as a false candidate
+                        continue;
+                    }
+                    if (node.getStartPosition() > terminatorCandi.position)
+                    {
+                        /*
+                        * The candidates position is lower then the position of the node, for which we are searching the terminator.
+                        * This means, that the last candidate, that we have checked, was the right one - if there was one.
+                        */
+                        arrTerminatorBlacklist[_lastTerm.position] = true;
+                        node.setEndPosition(_lastTerm.position).setEndTagLength(_lastTerm.length);
+                        isTerminated = true;
+                        break;
+                    }
+                    else
+                    {
+                        _lastTerm = terminatorCandi;
+                    }
                 }
             }
             if (!isTerminated)
@@ -509,7 +556,7 @@ unittest {
             <li>eins</li>
             <li>zwei</li>
             <li>drei</li>
-        <ol>
+        </ol>
         <p>have a nice day</p>
     </div>`;
     Dominator dom = new Dominator(html);
@@ -539,7 +586,7 @@ unittest {
 unittest {
     Dominator dom = new Dominator(readText("dummy.html"));
     auto filter = DomFilter("article");
-    assert( dom.filterDom(filter).filterComments().length == 3);
+    assert( dom.filterDom(filter).filterComments().length == 3 , to!(string)(dom.filterDom(filter).filterComments().length));
     assert( dom.filterDom(filter).length == 6);
 
     assert( dom.filterDom("div.*.ol.li").length == 3 );

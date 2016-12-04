@@ -116,7 +116,7 @@ class Node {
       Dominator dom = new Dominator(content);
       Node[] liNodes = dom.filterDom(DomFilter("li"));
       assert(liNodes[0].getEndTagLength == 5 );
-      assert(liNodes[1].getEndTagLength == 6 );
+      assert(liNodes[1].getEndTagLength == 6 , to!(string)(liNodes[1].getEndTagLength));
       assert(liNodes[2].getEndTagLength == 6 );
       assert(liNodes[3].getEndTagLength == 7 );
   }
