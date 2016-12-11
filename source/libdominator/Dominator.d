@@ -286,6 +286,10 @@ class Dominator
         import std.ascii : isWhite , isAlphaNum , isAlpha;
         import std.array : appender;
 
+        //Reset parsed state
+        this.nodes = [];
+        this.comments = [];
+
         if(this.haystack.length == 0) { return; }
         Node[] nodes;
         auto nodeAppender = appender(nodes);
