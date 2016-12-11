@@ -192,4 +192,30 @@ class Node {
     collectDescendants(this , nodes);
     return nodes;
   }
+
+  private void collectAncestors(Node node , ref Node[] nodes) {
+    if(node.hasParent) {
+      Node parentNode = node.getParent();
+      nodes ~= parentNode;
+      collectAncestors(parentNode , nodes);
+    }
+  }
+
+  public Node[] getAncestors() {
+    Node[] nodes;
+    collectAncestors(this , nodes);
+    return nodes;
+  }
+  unittest {
+    Node
+      root = new Node("root"),
+      firstChild = new Node("first-child"),
+      secondChild = new Node("second-child");
+
+      firstChild.setParent(&root);
+      secondChild.setParent(&firstChild);
+
+      assert(secondChild.getAncestors.length == 2);
+
+  }
 }
