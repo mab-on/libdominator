@@ -450,7 +450,7 @@ class Dominator
      Params:
         node = The Node from which you want to get the Document representation
     */
-    public string getElelment(Node node)
+    public string getElement(Node node)
     {
         return this.haystack[node.getStartPosition() .. (
                 node.getEndPosition() + node.getEndTagLength())];
