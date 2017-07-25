@@ -234,7 +234,7 @@ class Dominator
 
     private bool tryElementTerminator(ref terminator[][string] terminators , ref size_t needle) {
         import std.ascii : isWhite;
-
+        import std.uni : toLower;
         if( this.haystack[needle] != '<' ) {return false;}
 
         size_t[2] nameCoord;
@@ -250,18 +250,19 @@ class Dominator
             needle++
         ) {
             if(this.haystack[needle] == '>') {
-                terminators[this.haystack[nameCoord[0]..needle]] ~= terminator(position , 1 + needle - position);
+                terminators[this.haystack[nameCoord[0]..needle].toLower] ~= terminator(position , 1 + needle - position);
                 return true;
             }
         }
         nameCoord[1] = needle;
         for(; needle < this.haystack.length && this.haystack[needle].isWhite ; needle++) {}
         if(this.haystack[needle] == '>') {
-            terminators[this.haystack[nameCoord[0]..nameCoord[1]]] ~= terminator(position , 1 + needle - position);
+            terminators[this.haystack[nameCoord[0]..nameCoord[1]].toLower] ~= terminator(position , 1 + needle - position);
             return true;
         }
         return false;
     }
+
     private bool tryCommentOpener(ref size_t needle) {
         if(
             needle + 4 < this.haystack.length
@@ -464,8 +465,11 @@ class Dominator
     */
     public string getInner(Node node)
     {
-        return (node.getEndPosition() > (node.getStartPosition() + node.getStartTagLength())) ? this.haystack[(
-                node.getStartPosition() + node.getStartTagLength()) .. (node.getEndPosition())] : "";
+        if ( node.getEndPosition() > (node.getStartPosition() + node.getStartTagLength()) )
+        {
+            return this.haystack[(node.getStartPosition() + node.getStartTagLength())..(node.getEndPosition())];
+        }
+        return "";
     }
 
     /**
@@ -622,5 +626,16 @@ unittest {
     assert( dom.filterDom(filter).length);
     foreach(Node foundNode ; dom.filterDom(filter)) {
         assert( Attribute("href","//www.google.com/").matches(foundNode) );
+    }
+}
+/*
+* trouble with uppercase tags
+*/
+unittest
+{
+    Dominator dom = new Dominator(readText("dummy.html"));
+    foreach(node ; dom.filterDom("scpdurl"))
+    {
+        assert( dom.getInner(node) == "/timeSCPD.xml" );
     }
 }

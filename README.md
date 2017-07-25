@@ -1,8 +1,8 @@
-#libdominator
+# libdominator
 libdominator is a xHTML parser library written in [d](http://www.dlang.org)
 
-#example
-```dlang
+## usage
+```D
 /// basic example
 unittest {
     const string html =
@@ -24,10 +24,11 @@ unittest {
         <ol>
         <p>have a nice day</p>
     </div>`;
+
     Dominator dom = new Dominator(html);
 
     foreach(node ; dom.filterDom("ul.li")) {
-        //do something more usefull with the node then:
+        //do more usefull stuff then:
         assert(node.getParent.getTag() == "ul");
     }
 
@@ -49,7 +50,7 @@ unittest {
 }
 ```
 
-#Filter Syntax
+# Filter Syntax
 Expression = TAG[PICK]{ATTR_NAME:ATTR_VALUE}
 Multiple expressions can be concatenated with "." to find stuff inside of specific parent nodes.
 
@@ -59,4 +60,4 @@ Multiple expressions can be concatenated with "." to find stuff inside of specif
 | [PICK] | (can be ommited) Picks only the n th match. n begins on 1. PICK can be a list or range | [1] picks the first match , [1,3] picks the first and third , [1..3] picks the first three matches  |
 | {ATTR_NAME:ATTR_VALUE} | The attribute selector | {id:myID} , {class:someClass} , {href:(regex)^http://}  |
 
-Or check out https://github.com/mab-on/dominator
+See also https://github.com/mab-on/dominator

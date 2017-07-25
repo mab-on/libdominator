@@ -8,7 +8,7 @@
  */
 module libdominator.Node;
 
-import std.string : toLower;
+import std.uni : toLower;
 import std.format : format ;
 import std.conv : to ;
 
