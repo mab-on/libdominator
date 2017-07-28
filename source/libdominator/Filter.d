@@ -247,6 +247,7 @@ Node[] filterDom(Node[] nodes , DomFilter[] expressions) {
 
 ///Filters the given nodes and returns the nodes, that matches the given filter expression
 Node[] filterDom(Node[] nodes , DomFilter exp) {
+    import std.uni : icmp;
     if(exp.empty) { return nodes; }
     Node[] resultNodes;
     uint hit;
@@ -255,7 +256,7 @@ Node[] filterDom(Node[] nodes , DomFilter exp) {
         if(
             exp.followers
             && node.hasChildren()
-            && ( exp.front.name == node.getTag() || exp.front.name == "*" )
+            && ( 0 == icmp(exp.front.name , node.getTag()) || exp.front.name == "*" )
             && exp.front.has(++hit)
         ) {
             if( exp.front.attribs.length ) {
@@ -273,7 +274,7 @@ Node[] filterDom(Node[] nodes , DomFilter exp) {
             cExp.next;
             resultNodes ~= filterDom(node.getChildren() , cExp);
         }
-        else if( !exp.followers && (exp.front.name == node.getTag() || exp.front.name == "*" ) ) {
+        else if( !exp.followers && ( 0 == icmp(exp.front.name , node.getTag()) || exp.front.name == "*" ) ) {
             if( exp.front.attribs.length ) {
                 foreach(Attribute attrib ; exp.front.attribs) {
                     if( attrib.matches(node) && exp.front.has(++hit)) {
