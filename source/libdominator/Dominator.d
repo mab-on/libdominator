@@ -30,7 +30,6 @@ struct terminator
     size_t length;
 }
 
-pragma(inline,true):
 bool isBetween(in size_t needle, in size_t from, in size_t to)
 {
     return (needle > from && needle < to);
