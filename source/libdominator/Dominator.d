@@ -70,7 +70,8 @@ class Dominator
         return this;
     }
 
-    private bool tryElementOpener(ref Node node, ref size_t needle) {
+    private bool tryElementOpener(ref Node node, ref size_t needle)
+    {
         import std.ascii : isWhite , isAlphaNum , isAlpha;
         enum ParserStates : ubyte {
             name = 1,
@@ -308,7 +309,8 @@ class Dominator
             if(this.haystack[needle] == '<') {
 
                 needleProbe = needle;
-                if( this.tryElementTerminator(terminators , needleProbe) ) {
+                if( this.tryElementTerminator(terminators , needleProbe) )
+                {
                     needle = needleProbe;
                     continue;
                 }
@@ -325,9 +327,8 @@ class Dominator
 
                 needleProbe = needle;
                 Node elem = new Node();
-                if( this.tryElementOpener(elem , needleProbe) ) {
-
-
+                if( this.tryElementOpener(elem , needleProbe) )
+                {
                     needle = needleProbe;
                     if(state & ParserStates.inComment) {elem.isComment(true);}
                     nodeAppender.put(elem);
@@ -357,6 +358,7 @@ class Dominator
     private void hierarchize(terminator[][string] terminators)
     {
         import std.algorithm.sorting : sort;
+        import std.uni : toLower;
 
         bool[size_t] arrTerminatorBlacklist;
         foreach_reverse (Node node; this.nodes)
@@ -364,8 +366,8 @@ class Dominator
             terminator _lastTerm = terminator(node.getStartPosition(), 0);
             bool isTerminated = false;
 
-            if(node.getTag() in terminators) {
-                foreach_reverse (terminator terminatorCandi; terminators[node.getTag()])
+            if(node.getTag().toLower in terminators) {
+                foreach_reverse (terminator terminatorCandi; terminators[ node.getTag().toLower ])
                 {
                     if (terminatorCandi.position in arrTerminatorBlacklist)
                     {

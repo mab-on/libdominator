@@ -45,7 +45,7 @@ class Node {
 
   ///Sets the tagname
   public Node setTag(string tag) {
-    this.tag = toLower(tag);
+    this.tag = tag;
     return this;
   }
 
