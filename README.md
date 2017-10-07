@@ -1,9 +1,8 @@
 # libdominator
-libdominator is a xHTML parser library written in [d](http://www.dlang.org)
+libdominator is a xml/html parser library written in [d](http://www.dlang.org)
 
 ## usage
 ```D
-/// basic example
 unittest {
     const string html =
     `<div>
@@ -52,7 +51,7 @@ unittest {
 
 # Filter Syntax
 Expression = TAG[PICK]{ATTR_NAME:ATTR_VALUE}
-Multiple expressions can be concatenated with "." to find stuff inside of specific parent nodes.
+Multiple expressions can be concatenated with "." to find nodes inside of one or more parent nodes.
 
 | Item | Description | Example |
 |------|-------------|---------|
