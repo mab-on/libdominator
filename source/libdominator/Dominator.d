@@ -595,7 +595,7 @@ unittest {
 }
 
 unittest {
-    Dominator dom = new Dominator(readText("dummy.html"));
+    Dominator dom = new Dominator(readText("tests/dummy.html"));
     auto filter = DomFilter("article");
     assert( dom.filterDom(filter).filterComments().length == 3 , to!(string)(dom.filterDom(filter).filterComments().length));
     assert( dom.filterDom(filter).length == 6);
@@ -634,7 +634,7 @@ unittest {
 */
 unittest
 {
-    Dominator dom = new Dominator(readText("dummy.html"));
+    Dominator dom = new Dominator(readText("tests/dummy.html"));
     foreach(node ; dom.filterDom("scpdurl"))
     {
         assert( dom.getInner(node) == "/timeSCPD.xml" );

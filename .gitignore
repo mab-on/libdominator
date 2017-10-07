@@ -7,3 +7,5 @@ __dummy.html
 .vscode
 dub.selections.json
 libdominator-test-library
+*.sublime-project
+*.sublime-workspace
