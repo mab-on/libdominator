@@ -24,7 +24,7 @@ class Node {
   private string tag;
   private Attribute[] arrAttributes;
   private uint startPos, endPos;
-  private ushort startTagLength, endTagLength;
+  private size_t startTagLength, endTagLength;
   private bool is_comment;
   private Node* parent;
   private Node*[] children;
@@ -87,23 +87,23 @@ class Node {
 
   /// ditto
   public Node setStartTagLength(T)(T length) {
-    this.startTagLength = to!ushort(length);
+    this.startTagLength = to!size_t(length);
     return this;
   }
 
   /// ditto
   public Node setEndTagLength(T)(T length) {
-    this.endTagLength = to!ushort(length);
+    this.endTagLength = to!size_t(length);
     return this;
   }
 
   /// ditto
-  public ushort getStartTagLength() {
+  public size_t getStartTagLength() {
     return this.startTagLength;
   }
 
   /// ditto
-  public ushort getEndTagLength() {
+  public size_t getEndTagLength() {
     return this.endTagLength;
   }
   unittest {
