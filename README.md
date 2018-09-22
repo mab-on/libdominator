@@ -1,62 +1,43 @@
 # libdominator
-libdominator is a xml/html parser library written in [d](http://www.dlang.org)
 
-## usage
+## What is this about?
+
+A library, containing the following packages:
+
+- `DOM` - Document Object Model
+- `XML/HTML Parser` - read XML/HTML into a manageable structure (DOM)
+- `xPath` - filtering the dom
+
+## Example
 ```D
-unittest {
-    const string html =
-    `<div>
-        <p>Here comes a list!</p>
-        <ul>
-            <li class="wanted">one</li>
-            <!-- <li>two</li> -->
-            <li class="wanted hard">three</li>
-            <li id="item-4">four</li>
-            <li checked>five</li>
-            <li id="item-6">six</li>
-        </ul>
-        <p>another list</p>
-        <ol>
-            <li>eins</li>
-            <li>zwei</li>
-            <li>drei</li>
-        <ol>
-        <p>have a nice day</p>
-    </div>`;
+import libdominator;
 
-    Dominator dom = new Dominator(html);
+Node doc =
+	`<root>
+		<tag_a>
+			<p>preceding A</p>
+			<p>preceding B</p>
+		</tag_a>
+		<tag key=value fasel ding=dang\ dong >
+			<sub>ding</sub>
+			<sub foo=dang>dang</sub>
+			<sub foo="doing">doing</sub>
+			text
+		</tag>
+		<tag_b>
+			<p>following A</p>
+			<p>following B</p>
+		</tag_b>
+	</root>`.parse;
 
-    foreach(node ; dom.filterDom("ul.li")) {
-        //do more usefull stuff then:
-        assert(node.getParent.getTag() == "ul");
-    }
+	//setup filter
+	LocationPath xPath;
+	xPath.steps ~= LocationStep( Axis.child , new Element("tag") );
+	xPath.steps ~= LocationStep( Axis.child , new Element("sub") );
+	xPath.steps ~= LocationStep( Axis.following , new Element("p") );
 
-    Node[] nodes = dom.filterDom("ul.li");
-    assert(dom.getInner( nodes[0] ) == "one" );
-    assert(nodes[0].getAttributes() == [ Attribute("class","wanted") ] );
-    assert(Attribute("class","wanted").matches(nodes[0]));
-    assert(Attribute("class","wanted").matches(nodes[2]));
-    assert(Attribute("class",["wanted","hard"]).matches(nodes[2]));
-    assert(nodes[1].isComment());
+	Node[] hits = xPath.evaluate(doc);
 
-    assert(dom.filterDom("ul.li").length == 6);
-    assert(dom.filterDom("ul.li").filterComments.length == 5);
-    assert(dom.filterDom("li").length == 9);
-    assert(dom.filterDom("li[1]").length == 1); //the first li in the dom
-    assert(dom.filterDom("*.li[1]").length == 2); //the first li in ul and first li in ol
-    assert(dom.getInner( (*dom.filterDom("*{checked:}").ptr) ) == "five");
-
-}
+	assert( hits[0].outerHTML == "<p>following A</p>");
+	assert( hits[1].outerHTML == "<p>following B</p>");
 ```
-
-# Filter Syntax
-Expression = TAG[PICK]{ATTR_NAME:ATTR_VALUE}
-Multiple expressions can be concatenated with "." to find nodes inside of one or more parent nodes.
-
-| Item | Description | Example |
-|------|-------------|---------|
-| TAG | The Name of the node | a , p , div , *  |
-| [PICK] | (can be ommited) Picks only the n th match. n begins on 1. PICK can be a list or range | [1] picks the first match , [1,3] picks the first and third , [1..3] picks the first three matches  |
-| {ATTR_NAME:ATTR_VALUE} | The attribute selector | {id:myID} , {class:someClass} , {href:(regex)^http://}  |
-
-See also https://github.com/mab-on/dominator

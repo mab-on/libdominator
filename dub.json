@@ -3,8 +3,8 @@
 	"authors": [
 		"Martin Brzenska"
 	],
-	"description": "A HTML Parser Library",
-	"copyright": "Copyright © 2016, Martin Brzenska",
+	"description": "DOM, XPath, xml/html-parser",
+	"copyright": "Martin Brzenska",
 	"license": "MIT",
 	"targetType": "library"
 }
