@@ -1,5 +1,6 @@
-module libdominator.xpath;
+module libdominator.xpath.xpath;
 
+import libdominator.xpath.predicate;
 import libdominator.dom;
 
 version(unittest)
@@ -68,6 +69,8 @@ enum PrincipalNodeType
 	element
 }
 
+
+
 /**
 *
 * axis::node_test[predicate_1][predicate_N]
@@ -79,6 +82,7 @@ struct LocationStep
 {
 	Axis axis;
 	Node test_node;
+	Predicate[] predicates;
 
 	this(string axis , Node test_node)
 	{
@@ -385,7 +389,7 @@ LocationPath parse_path_expression(string xpath)
 
 	foreach(step ; xpath.split("/"))
 	{
-		locPath.steps ~= parse_step_expression(step);
+		if(step.length) locPath.steps ~= parse_step_expression(step);
 	}
 
 	return locPath;
@@ -452,7 +456,7 @@ string expression(LocationPath path)
 {
 	import std.algorithm : map , joiner;
 	import std.conv : to;
-	return path.steps.map!( s => s.expression() ).joiner("/").to!string;
+	return path.steps.map!( step => step.expression() ).joiner("/").to!string;
 }
 
 string expression_abbreviated(LocationPath path)
@@ -500,4 +504,11 @@ string expression_abbreviated(LocationStep step)
 unittest
 {
 	writeln( "Abbreviated XPath Expression: " , __xpath_unittest__.expression_abbreviated() );
+}
+
+unittest
+{
+	string firefox_generated_xpath = "/html/body/div[1]/div[3]/div/div[2]/div/div/div[2]/div/div[2]/div[4]/div/div[2]/ol[1]/li[1]/div[1]/div[2]/div[1]/small/a";
+	firefox_generated_xpath.writeln;
+	writeln( firefox_generated_xpath.parse_path_expression.expression );
 }
