@@ -90,9 +90,11 @@ struct LocationStep
 		this.test_node = test_node;
 	}
 
-	/*
-	* predicates[]
-	*/
+	this(string axis , Node test_node , Predicate[] predicates)
+	{
+		this(axis,test_node);
+		this.predicates = predicates;
+	}
 
 	/**
 	* TODO: implement attribute-axis and namespace-axis node tests
@@ -412,6 +414,7 @@ LocationStep parse_step_expression(string step)
 
 	Element nodetest;
 	Axis axis = Axis.child;
+	Predicate[] predicates;
 
 	auto parts = step[0..axisnode_stop].splitter("::");
 	if(parts.array.length == 1)
@@ -431,21 +434,17 @@ LocationStep parse_step_expression(string step)
 		size_t pred_hook = axisnode_stop;
 		do
 		{
-			step[ pred_hook .. 1+step.indexOf("]", pred_hook ) ].parse_predicate_expression();
+			predicates ~= step[ pred_hook .. 1+step.indexOf("]", pred_hook ) ].parse_predicate_expression(nodetest);
 			pred_hook = step.indexOf("[", 1+pred_hook );
 		}
 		while(pred_hook != -1);
 
 	}
 
-	return LocationStep( axis , nodetest );
+	return LocationStep( axis , nodetest , predicates);
 }
 
-auto parse_predicate_expression(string pred)
-{
-	//supports only attribute
 
-}
 
 unittest
 {
@@ -471,14 +470,20 @@ string expression(LocationStep step)
 	import std.algorithm : map , joiner;
 	import std.conv : to;
 
-	return step.axis
-	~ "::"
-	~ step.test_node.nodeName()
-	~ (
-		step.test_node.hasAttributes()
-			? step.test_node.getAttributes().map!(a => "[attribute::"~ a.name()~`="`~a.value()~`"]` ).joiner().to!string
-			: ""
-	)
+	return 
+		step.axis
+		~ "::"
+		~ step.test_node.nodeName()
+		~ (
+			step.test_node.hasAttributes()
+				? step.test_node.getAttributes().map!(a => "[attribute::"~ a.name()~`="`~a.value()~`"]` ).joiner().to!string
+				: ""
+		)
+		~ (
+			step.predicates.length
+				? step.predicates.map!( p => p.toString() ).joiner().to!string
+				: ""
+		)
 	;
 }
 unittest
@@ -509,6 +514,9 @@ unittest
 unittest
 {
 	string firefox_generated_xpath = "/html/body/div[1]/div[3]/div/div[2]/div/div/div[2]/div/div[2]/div[4]/div/div[2]/ol[1]/li[1]/div[1]/div[2]/div[1]/small/a";
+	
+	writeln("\nfirefox generated:");
 	firefox_generated_xpath.writeln;
+	writeln("\nreconstruction test:");
 	writeln( firefox_generated_xpath.parse_path_expression.expression );
 }

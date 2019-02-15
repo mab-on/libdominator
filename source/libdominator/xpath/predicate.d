@@ -12,14 +12,51 @@ unittest
 	writeln(op.toString());
 }
 
+auto parse_predicate_expression(in string pred, Node nodetest)
+{
+	import std.string : strip,isNumeric;
+	string _pred = pred.strip("[] ");
+	
+	//if the value is a sole number, 
+	//then it is to be extendet to a functioncall::NodesetFunction::Position
+	if( _pred.isNumeric() )
+	{
+		return Predicate(PredicateExpression(
+			new Position([nodetest]),
+			new Number(_pred),
+			new Eq()
+		));	
+	}
+	
+	return Predicate();
+}
+
 struct Predicate
 {
 
 	private PredicateExpression[] expr;
 
+	this(PredicateExpression expression)
+	{
+		this.expr ~= expression;
+	}
+
+	this(PredicateExpression[] expressions)
+	{
+		this.expr = expressions;
+	} 
+
 	bool evaluate(Node test_node)
 	{
 		return true; //todo
+	}
+
+	string toString()
+	{
+		import std.algorithm : map , joiner;
+		import std.conv : to;
+		//TODO " or "-joiner  (not only "or" are possible ;) )
+		return "[" ~ this.expr.map!(p => p.toString()).joiner(" or ").to!string ~ "]";
 	}
 }
 
@@ -62,7 +99,7 @@ class OperatorOr : Operator
 	{ return true; } //dummy
 }
 
-class PredicateExpression
+struct PredicateExpression
 {
 	ExprToken a;
 	Operator op;
@@ -70,10 +107,12 @@ class PredicateExpression
 
 	this(ExprToken a, ExprToken b, Operator op)
 	{
-
+		this.a = a;
+		this.op = op;
+		this.b = b;
 	}
 
-	override public  string toString()
+	public string toString()
 	{
 		string ret = a.toString() ~ op.toString() ~ b.toString();
 		return ret;
@@ -96,6 +135,12 @@ class Number : ExprToken
 	double _value;
 
 	this(double value) { this._value = value; }
+
+	this(string value)
+	{
+		import std.conv : to;
+		this( value.to!double );
+	}
 
 	override string toString()
 	{
