@@ -342,7 +342,7 @@ class Dominator
                 needleProbe = needle;
                 if( this.tryCommentTerminator(needleProbe) ) {
                     needle = needleProbe;
-                    state &= ~ParserStates.inComment;
+                    state &= ~cast(int)(ParserStates.inComment);
                     continue;
                 }
             }
