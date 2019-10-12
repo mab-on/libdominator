@@ -1,3 +1,7 @@
+/*
+* Predicate refers to the XPath expression written in square brackets.
+* It refers to restrict the selected nodes in a node set for some condition.
+*/
 module libdominator.xpath.predicate;
 
 import libdominator.dom.node : Node;
