@@ -2,7 +2,7 @@ Here are some examples of location paths using the unabbreviated syntax and the 
 The Examples are taken from https://www.w3.org/TR/1999/REC-xpath-19991116/#location-paths
 The Format for the list is:
 
-? desctiption  
+? description  
 F `unabbreviated syntax`  
 A `abbreviated syntax`  
 ______________________
