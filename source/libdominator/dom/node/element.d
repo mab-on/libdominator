@@ -4,8 +4,9 @@ import std.typecons : Nullable;
 
 import libdominator.dom.node.attribute;
 import libdominator.dom.node.node;
+import libdominator.dom.node.parentnode;
 
-class Element : Node
+class Element : Node, ParentNode
 {
 	private string _localName;
 	private string _prefix;
@@ -52,6 +53,31 @@ class Element : Node
   override public Node firstChild()
   {
   	return this.children.length ? this.children[0] : null;
+  }
+
+  
+  public Element firstElementChild() {
+    foreach( node ; this.children ) {
+      if( typeid(node) is typeid(Element) ) return cast(Element)node;
+    }
+    return null;
+  }
+  unittest {
+    import libdominator.parser;
+    
+    auto doc = `<root>
+      first-Child
+      <element>
+        first-ElementChild
+      </element>
+      third-Child
+      <element>
+        second-ElementChild
+      </element>
+    </root>`.parse();
+
+    assert( doc.firstChild.textContent == "first-Child" );
+    assert( doc.firstElementChild.textContent == "first-ElementChild" );
   }
 
   override public Node lastChild()
