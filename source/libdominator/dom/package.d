@@ -32,33 +32,13 @@ unittest
 unittest
 {
   Node html = new Element("html");
-
+  auto paragraph = new Element("p");
   html
   .appendChild(new Element("body"))
-  .appendChild(new Element("p"))
+  .appendChild(paragraph)
   .appendChild(new Text("Blabla blah"));
 
-  writeln( html.textContent);
+  assert( html.textContent == "Blabla blah");
+  assert( paragraph.textContent == "Blabla blah");
+   
 }
-
-unittest
-{
-  Node html = new Element("html");
-  Node document_body = html.appendChild(new Element("body"));
-
-  document_body.appendChild(new Text("Blabla blah"));
-
-  document_body.appendChild(new Comment("This is a coment"));
-
-  document_body
-  	.appendChild(new Element("h1"))
-  	.appendChild(new Text("ATENTION ATENTION!"));
-
-  document_body
-  .appendChild(new Element("p"))
-  .appendChild(new Text("Blabla blub"));
-
-  writeln( html.outerHTML );
-
-}
-

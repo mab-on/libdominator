@@ -12,16 +12,22 @@ import std.stdio;
 
 unittest
 {
+	assert(`<tag key=value fasel ding=dang\ dong >text</tag>`.parse.outerHTML 
+        == `<tag key=value fasel ding=dang\ dong>text</tag>`);
 
-	//Node fragment = parse(readText("source/temp.html"));
-	//Node fragment = parse(readText("dummy.html"));
-	//Node fragment = parse(readText("/home/mab/tmp/twitt.htm"));
+	assert(`<tag key=value single='quotes' double="quotes" >text</tag>`.parse.getAttributes
+        == [
+            Attribute("key","value",0x00), 
+            Attribute("single","quotes",'\''),
+            Attribute("double","quotes",'"')
+        ]);
 
-
-	`<tag key=value fasel ding=dang\ dong >text</tag>`.parse.outerHTML.writeln;
-	`<tag key=value>text</tag>`.parse.outerHTML.writeln;
-	`<tag key=value bla=fasel>text</tag>`.parse.getAttributes.writeln;
-	`<tag key=value bla=fasel dings = bums ding="dang dong" doning > text</tag>`.parse.getAttributes.writeln;
+	assert(`<tag keyA = valueA keyB="valB.1 valB.2" flag > text</tag>`.parse.getAttributes
+        == [
+            Attribute("keyA","valueA",0x00),
+            Attribute("keyB","valB.1 valB.2", '"'),
+            Attribute("flag","")
+        ]);
 }
 
 public Element parse(string haystack)

@@ -59,28 +59,23 @@ unittest
 
 	child = cast(Element)p_ba_element.lastChild;
 	assert( child && child.getAttribute("href") == "#last" );
-
-	writeln("------------------");
-	writeln( doc.outerHTML );
-	writeln("------------------");
-
 }
 
 unittest
 {
 	import std.file : readText;
 	import std.path : dirName;
+	import std.range;
 
 	Node doc = readText( dirName(__FILE_FULL_PATH__)~"/dummy.html" ).parse;
 
-	LocationPath xPath;
 	auto test_node = new Element("li");
 	test_node.addAttribute( Attribute("id" , "li-1-o2-1") );
-	xPath.steps ~= LocationStep( Axis.descendant_or_self , test_node );
 
-	foreach(hit ; xPath.evaluate(doc))
-	{
-		writeln( hit.outerHTML );
-	}
+	LocationPath xPath;
+	xPath.steps ~= LocationStep( Axis.descendant_or_self , test_node ); /* //li[@id="li-1-o2-1"]/ */
 
+	auto hits = xPath.evaluate(doc);
+	assert( hits.length == 1 );
+	assert(hits.front().firstChild().textContent() == "li-1-ol-2 Inner");
 }

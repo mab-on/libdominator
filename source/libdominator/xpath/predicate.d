@@ -10,11 +10,6 @@ version(unittest)
 {
 	import std.stdio;
 }
-unittest
-{
-	auto op = new Eq();
-	writeln(op.toString());
-}
 
 auto parse_predicate_expression(in string pred, Node nodetest)
 {

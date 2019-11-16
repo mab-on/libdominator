@@ -3,25 +3,6 @@ module libdominator.xpath.xpath;
 import libdominator.xpath.predicate;
 import libdominator.dom;
 
-version(unittest)
-{
-	import std.stdio;
-
-	LocationPath __xpath_unittest__;
-}
-
-unittest
-{
-	__xpath_unittest__.steps ~= LocationStep( Axis.child , new Element("tag") );
-	__xpath_unittest__.steps ~= LocationStep( Axis.child , new Element("sub") );
-	__xpath_unittest__.steps ~= LocationStep( Axis.following , new Element("p") );
-	__xpath_unittest__.steps ~= LocationStep( Axis.self ,
-		(new Element("p"))
-			.setAttribute( Attribute("id","testid") )
-			.setAttribute( Attribute("class","testclass") )
-	);
-
-}
 
 class XPathException : Exception
 {
@@ -98,6 +79,7 @@ struct LocationStep
 
 	/**
 	* TODO: implement attribute-axis and namespace-axis node tests
+	* TODO: implement Predicates
 	*/
 	bool test( Node context_node  , out Node[] result )
 	{
@@ -445,12 +427,6 @@ LocationStep parse_step_expression(string step)
 }
 
 
-
-unittest
-{
-	writeln( "child::fasel[dings=bums][ding::dong]".parse_path_expression.expression );
-}
-
 string expression(LocationPath path)
 {
 	import std.algorithm : map , joiner;
@@ -486,10 +462,6 @@ string expression(LocationStep step)
 		)
 	;
 }
-unittest
-{
-	writeln( "Full XPath Expression: " , __xpath_unittest__.expression() );
-}
 
 string expression_abbreviated(LocationStep step)
 {
@@ -505,18 +477,4 @@ string expression_abbreviated(LocationStep step)
 			: ""
 	)
 	;
-}
-unittest
-{
-	writeln( "Abbreviated XPath Expression: " , __xpath_unittest__.expression_abbreviated() );
-}
-
-unittest
-{
-	string firefox_generated_xpath = "/html/body/div[1]/div[3]/div/div[2]/div/div/div[2]/div/div[2]/div[4]/div/div[2]/ol[1]/li[1]/div[1]/div[2]/div[1]/small/a";
-	
-	writeln("\nfirefox generated:");
-	firefox_generated_xpath.writeln;
-	writeln("\nreconstruction test:");
-	writeln( firefox_generated_xpath.parse_path_expression.expression );
 }
