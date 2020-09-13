@@ -1,0 +1,9 @@
+{
+	"name": "test",
+	"description": "libdominator tests",
+	"sourcePaths": ["../"],
+	"importPaths": ["./"],
+	"dependencies": {
+        "libdominator": {"path": "../"}
+    }
+}

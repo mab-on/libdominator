@@ -2,8 +2,8 @@ module libdominator.dom.node.element;
 
 import std.typecons : Nullable;
 
-import libdominator.dom.node.attribute;
 import libdominator.dom.node.node;
+import libdominator.dom.node.attribute;
 import libdominator.dom.node.parentnode;
 
 class Element : Node, ParentNode
@@ -55,29 +55,12 @@ class Element : Node, ParentNode
   	return this.children.length ? this.children[0] : null;
   }
 
-  
+
   public Element firstElementChild() {
     foreach( node ; this.children ) {
       if( typeid(node) is typeid(Element) ) return cast(Element)node;
     }
     return null;
-  }
-  unittest {
-    import libdominator.parser;
-    
-    auto doc = `<root>
-      first-Child
-      <element>
-        first-ElementChild
-      </element>
-      third-Child
-      <element>
-        second-ElementChild
-      </element>
-    </root>`.parse();
-
-    assert( doc.firstChild.textContent == "first-Child" );
-    assert( doc.firstElementChild.textContent == "first-ElementChild" );
   }
 
   override public Node lastChild()
@@ -91,9 +74,6 @@ class Element : Node, ParentNode
     import std.array : join , array;
     return this.childNodes().map!(n => n.textContent()).array().join(" ");
   }
-
-
-
 
   override public string outerHTML()
   {
@@ -248,13 +228,4 @@ class Element : Node, ParentNode
   ///ditto
   @property public bool empty_element(bool value)
   { return this._empty_element = value; }
-  ///
-  unittest
-  {
-    Element elem = new Element("br");
-    assert( elem.empty_element == false );
-    elem.empty_element = true;
-    assert( elem.empty_element == true );
-  }
-
 }

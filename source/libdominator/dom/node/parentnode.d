@@ -8,10 +8,10 @@ import libdominator.dom.node.element : Element;
 *	https://dom.spec.whatwg.org/#parentnode
 */
 interface ParentNode {
-	
+
 	/**
 	* The firstElementChild attribute’s getter must return the first child that is an element, and null otherwise.
 	*/
 	Element firstElementChild();
-	
+
 }

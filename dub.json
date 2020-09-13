@@ -6,5 +6,12 @@
 	"description": "DOM, XPath, xml/html-parser",
 	"copyright": "Martin Brzenska",
 	"license": "MIT",
-	"targetType": "library"
+	"targetType": "library",
+	"configurations": [
+		{
+			"name": "unittest",
+			"sourcePaths": ["./test"],
+			"importPaths": ["./test"]
+		}
+	]
 }

@@ -1,6 +1,4 @@
-module libdominator.test;
-
-import std.stdio;
+module test.test;
 import libdominator;
 
 unittest
@@ -34,7 +32,7 @@ unittest
 	xPath.steps ~= LocationStep( Axis.child , new Element("sub") );
 	xPath.steps ~= LocationStep( Axis.following , new Element("p") );
 
-	Node[] hits = xPath.evaluate(doc);
+	Nodeset hits = doc.evaluate(xPath);
 	Node p_ba = hits[0];
 
 	assert( hits.length == 2 );
@@ -75,7 +73,7 @@ unittest
 	LocationPath xPath;
 	xPath.steps ~= LocationStep( Axis.descendant_or_self , test_node ); /* //li[@id="li-1-o2-1"]/ */
 
-	auto hits = xPath.evaluate(doc);
+	auto hits = doc.evaluate(xPath);
 	assert( hits.length == 1 );
 	assert(hits.front().firstChild().textContent() == "li-1-ol-2 Inner");
 }

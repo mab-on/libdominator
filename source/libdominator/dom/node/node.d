@@ -1,6 +1,6 @@
 module libdominator.dom.node.node;
+
 import libdominator.dom.node.attribute;
-import libdominator.dom.node.element : Element;
 
 class Node
 {
@@ -336,6 +336,4 @@ class Node
 		}
 		return [this];
 	}
-
-
 }
