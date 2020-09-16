@@ -1,5 +1,7 @@
 module libdominator.dom.characterdata.characterdata;
+
 import libdominator.dom.node;
+import libdominator.dom.nodetree.nodelist;
 import libdominator.dom.domexception;
 
 class CharacterData : Node
@@ -36,7 +38,7 @@ class CharacterData : Node
   final override public bool hasChildNodes()
   { return false; }
 
-  final override public Node[] childNodes()
+  final override public NodeList childNodes()
   { return []; }
 
   final override public Node firstChild()
@@ -48,7 +50,7 @@ class CharacterData : Node
   final override public Node removeChild(Node child)
   { throw new InvalidModificationError(); }
 
-  final override public Node[] getDescendants() {
+  final override public NodeList getDescendants() {
     return [];
   }
 

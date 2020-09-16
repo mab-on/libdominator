@@ -2,16 +2,17 @@ module libdominator.dom.node.element;
 
 import std.typecons : Nullable;
 
-import libdominator.dom.node.node;
 import libdominator.dom.node.attribute;
+import libdominator.dom.node.node;
 import libdominator.dom.node.parentnode;
+import libdominator.dom.nodetree.nodelist;
 
 class Element : Node, ParentNode
 {
 	private string _localName;
 	private string _prefix;
 
-  private Node[] children;
+  private NodeList children;
 
   private Attribute[] attributes;
 
@@ -42,8 +43,8 @@ class Element : Node, ParentNode
     return this.children.length ? true : false;
   }
 
-  override public Node[] childNodes() {
-    Node[] nodes;
+  override public NodeList childNodes() {
+    NodeList nodes;
     foreach(Node pNode ; this.children) {
       if(pNode !is  null) { nodes ~= pNode; }
     }
@@ -158,15 +159,15 @@ class Element : Node, ParentNode
   }
 
 
-  private void collectDescendants(Node node ,ref Node[] nodes) {
+  private void collectDescendants(Node node ,ref NodeList nodes) {
     foreach(Node childNode ; node.childNodes()) {
       nodes ~= childNode;
       collectDescendants(childNode , nodes);
     }
   }
 
-  override public Node[] getDescendants() {
-    Node[] nodes;
+  override public NodeList getDescendants() {
+    NodeList nodes;
     collectDescendants(this , nodes);
     return nodes;
   }

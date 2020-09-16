@@ -165,7 +165,7 @@ class Node
   }
 
   public NodeList getAncestors() {
-    Node[] nodes;
+    NodeList nodes;
     collectAncestors(this , nodes);
     return nodes;
   }
