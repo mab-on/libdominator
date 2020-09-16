@@ -1,9 +1,10 @@
 module libdominator.xpath.locationpath.locationpath;
 
-import libdominator.xpath.locationpath.step;
-import libdominator.xpath.locationpath.axis;
-import libdominator.xpath.nodeset;
 import libdominator.dom.node;
+import libdominator.dom.nodetree.nodelist;
+import libdominator.xpath.locationpath.axis;
+import libdominator.xpath.locationpath.step;
+import libdominator.xpath.nodeset;
 
 struct LocationPath
 {
@@ -12,7 +13,7 @@ struct LocationPath
 /**
 * evaluates a XPath-LocationPath against a Node
 */
-void evaluate(Node[] context_nodes, LocationPath path , ref Nodeset output ) {
+void evaluate( NodeList context_nodes, LocationPath path, ref Nodeset output ) {
 	import std.stdio;
 	Nodeset stepHits;
 	if( 0 < filter(context_nodes, path.steps[0], stepHits) ) {
@@ -25,7 +26,7 @@ void evaluate(Node[] context_nodes, LocationPath path , ref Nodeset output ) {
 	}
 }
 
-Nodeset evaluate( Node[] context_nodes, LocationPath path )
+Nodeset evaluate( NodeList context_nodes, LocationPath path )
 {
 	Nodeset result;
 	evaluate(context_nodes, path, result);

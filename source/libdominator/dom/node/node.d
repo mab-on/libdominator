@@ -1,6 +1,7 @@
 module libdominator.dom.node.node;
 
 import libdominator.dom.node.attribute;
+import libdominator.dom.nodetree.nodelist;
 
 class Node
 {
@@ -83,7 +84,7 @@ class Node
 	* See_Also:
   * 	https://dom.spec.whatwg.org/#dom-node-childnodes
 	*/
-  abstract public Node[] childNodes();
+  abstract public NodeList childNodes();
 
 	/**
 	*
@@ -155,7 +156,7 @@ class Node
 
 
 
-  private void collectAncestors(Node node , ref Node[] nodes) {
+  private void collectAncestors(Node node , ref NodeList nodes) {
     if(node.hasParent) {
       auto parentNode = node.parentNode();
       nodes ~= parentNode;
@@ -163,13 +164,13 @@ class Node
     }
   }
 
-  public Node[] getAncestors() {
+  public NodeList getAncestors() {
     Node[] nodes;
     collectAncestors(this , nodes);
     return nodes;
   }
 
-  abstract public Node[] getDescendants();
+  abstract public NodeList getDescendants();
 
 
 
@@ -328,7 +329,7 @@ class Node
 	* Get Siblings of the current Element
 	* No W3 standard
 	*/
-	public Node[] getSiblings()
+	public NodeList getSiblings()
 	{
 		if(this.hasParent)
 		{

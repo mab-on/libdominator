@@ -1,15 +1,16 @@
 module libdominator.xpath.locationpath.step.filter;
 
-import libdominator.xpath.locationpath.step.step;
-import libdominator.xpath.nodeset;
 import AxisFilter = libdominator.xpath.locationpath.axis.filter;
 import libdominator.dom.node;
+import libdominator.dom.nodetree.nodelist;
+import libdominator.xpath.locationpath.step.step;
+import libdominator.xpath.nodeset;
 
 /**
 * TODO: implement attribute-axis and namespace-axis node tests
 * TODO: implement Predicate
 */
-size_t filter(Node[] context_nodes, LocationStep step, out Nodeset output )
+size_t filter(NodeList context_nodes, LocationStep step, out Nodeset output )
 {
 
 	Nodeset axisHits;

@@ -1,10 +1,11 @@
 module libdominator.xpath.locationpath.axis.filter;
 
 import libdominator.dom.node;
+import libdominator.dom.nodetree.nodelist;
 import libdominator.xpath.locationpath.axis;
 import libdominator.xpath.nodeset;
 
-size_t filter(Node[] context_nodes, Axis axis  , out Nodeset output ) {
+size_t filter(NodeList context_nodes, Axis axis  , out Nodeset output ) {
 	foreach(Node context_node ; context_nodes) {
 		final switch(axis)
 		{
