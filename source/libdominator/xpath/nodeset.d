@@ -1,12 +1,13 @@
 module libdominator.xpath.nodeset;
 
 import libdominator.dom.node.node;
+import libdominator.dom.nodetree.nodelist;
 
 struct Nodeset {
-	Node[] _nodes;
+	NodeList _nodes;
 	alias _nodes this;
 
-	public this(Node[] nodes) {
+	public this(NodeList nodes) {
 		this._nodes = nodes;
 	}
 
@@ -22,7 +23,7 @@ struct Nodeset {
 		return this.add(node);
 	}
 
-	void opAssign(Node[] nodes) {
+	void opAssign(NodeList nodes) {
 		this._nodes.length = 0;
 		foreach(node ; nodes) {
 			this.add(node);
