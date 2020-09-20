@@ -1,6 +1,7 @@
 module libdominator.dom.node.node;
 
 import libdominator.dom.node.attribute;
+import libdominator.dom.node.element;
 import libdominator.dom.nodetree.nodelist;
 
 class Node
@@ -60,15 +61,25 @@ class Node
     return this.parent;
   }
 
-
-	//TODO
 	/**
 	* parentElement is the parent element of the current node. This is always a DOM Element object, or null
 
 	* See_Also:
 	*		https://dom.spec.whatwg.org/#dom-node-parentelement
+	*		https://dom.spec.whatwg.org/#parent-element
+	*		https://developer.mozilla.org/en-US/docs/Web/API/Node/parentElement
 	*/
-	//public Element parentElement();
+	public Element parentElement() {
+		if (this.parentNode() is null) {
+			return null;
+		}
+
+		if ( typeid(this.parentNode()) == typeid(Element) ) {
+			return cast(Element)this.parentNode();
+		}
+
+		return null;
+	}
 
   /**
   *return true if the context object has children, and false otherwise.
