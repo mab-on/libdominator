@@ -125,14 +125,28 @@ class Node
   //public Node previousSibling();
 
 	/**
-	* TODO
 	* The nextSibling attribute’s getter must return the context object’s next sibling or null
 	*
 	* See_Also:
 	*		https://dom.spec.whatwg.org/#dom-node-nextsibling
 	*
 	*/
-	//	public Node nextSibling;
+	public Node nextSibling() {
+		if( this.parentNode() is null ) {
+			return null;
+		}
+
+		auto siblings = this.parentNode().childNodes();
+		foreach( i, node ; siblings ) {
+			if( this == node ) {
+				return 1+i < siblings.length
+					? siblings[1+i]
+					: null;
+			}
+		}
+
+		return null;
+	}
 
 
   /**
