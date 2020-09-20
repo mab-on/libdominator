@@ -10,7 +10,7 @@ unittest
     assert( null !is doc.firstChild().parentElement() );
 }
 
-/// nextSibling
+/// nextSibling & previousSibling
 unittest {
 	auto doc = `
 	<bros>
@@ -26,4 +26,7 @@ unittest {
 
 	auto oli = vince.nextSibling();
 	assert( oli.textContent() == "Oli" );
+
+	assert( vince == oli.previousSibling() );
+	assert( vince.previousSibling() is null );
 }

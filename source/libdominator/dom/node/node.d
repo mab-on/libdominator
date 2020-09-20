@@ -112,17 +112,28 @@ class Node
   abstract public Node lastChild();
 
 	/**
-	* TODO
 	* The previousSibling attribute’s getter must return the context object’s previous sibling or null
-	*
-	* Note:
-	* 	An Attr node has no siblings.
 	*
 	* See_Also:
 	*		https://dom.spec.whatwg.org/#dom-node-previoussibling
 	*		https://developer.mozilla.org/en-US/docs/Web/API/Node/previousSibling
 	*/
-  //public Node previousSibling();
+	public Node previousSibling() {
+		if( this.parentNode() is null ) {
+			return null;
+		}
+
+		auto siblings = this.parentNode().childNodes();
+		foreach( i, node ; siblings ) {
+			if( this == node ) {
+				return i > 0
+					? siblings[i-1]
+					: null;
+			}
+		}
+
+		return null;
+	}
 
 	/**
 	* The nextSibling attribute’s getter must return the context object’s next sibling or null
