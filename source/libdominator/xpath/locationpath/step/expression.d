@@ -56,33 +56,46 @@ string expression_abbreviated(LocationStep step) {
 	import std.algorithm : map , joiner;
 	import std.conv : to;
 
-	return
-	step.axis.abbreviate()
-	~ step.nodeTest.nodeName()
+	string abbrev = step.axis.abbreviate() ~ step.nodeTest.nodeName();
+	if( typeid(step.nodeTest) != typeid(Element) ) {
+		return abbrev;
+	}
+
+	return abbrev
 	~ (
-		step.nodeTest.hasAttributes()
-			? step.nodeTest.getAttributes().map!(a => "["~Axis.attribute.abbreviate()~ a.name()~`="`~a.value()~`"]` ).joiner().to!string
+		(cast(Element)step.nodeTest).hasAttributes()
+			? (cast(Element)step.nodeTest).getAttributes().map!(a => "["~abbreviate(Axis.attribute)~ a.name()~`="`~a.value()~`"]` ).joiner().to!string
 			: ""
 	);
 }
 
-string expression(LocationStep step)
+string expression_full(LocationStep step)
 {
 	import std.algorithm : map , joiner;
 	import std.conv : to;
 
-	return
+	string expr =
 		step.axis
 		~ "::"
-		~ step.nodeTest.nodeName()
-		~ (
-			step.nodeTest.hasAttributes()
-				? step.nodeTest.getAttributes().map!(a => "[attribute::"~ a.name()~`="`~a.value()~`"]` ).joiner().to!string
-				: ""
-		)
-		~ (
-			step.predicates.length
-				? step.predicates.map!( p => p.toString() ).joiner().to!string
-				: ""
-		);
+		~ step.nodeTest.nodeName();
+
+	if( typeid(step.nodeTest) == typeid(Element) && (cast(Element)step.nodeTest).hasAttributes() ) {
+		expr ~= (cast(Element)step.nodeTest)
+			.getAttributes()
+			.map!(a => "[attribute::"~ a.name()~`="`~a.value()~`"]` )
+			.joiner()
+			.to!string;
+	}
+
+	if(step.predicates.length) {
+		expr ~=	step.predicates.map!( p => p.toString() ).joiner().to!string;
+	}
+
+	return expr;
+}
+
+string expression(LocationStep step, bool abbreviate=true) {
+	return abbreviate
+		? step.expression_abbreviated()
+		: step.expression_full();
 }

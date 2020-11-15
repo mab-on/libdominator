@@ -1,6 +1,8 @@
 module libdominator.dom.characterdata.text;
 
+import libdominator.dom.node.attribute;
 import libdominator.dom.characterdata.characterdata;
+import libdominator.dom.node.node;
 
 class Text : CharacterData
 {
@@ -10,6 +12,9 @@ class Text : CharacterData
   }
 
   override public ushort nodeType()
-  { return 3; }
+  { return Node.TEXT_NODE; }
+
+  override public string textContent()
+  { return this.nodeValue(); }
 
 }

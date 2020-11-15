@@ -1,0 +1,40 @@
+//module libdominator.dom.node.DocumentFragment;
+
+//import libdominator.dom.node.attribute;
+//import libdominator.dom.node.node;
+//import libdominator.dom.node.parentnode;
+
+//class DocumentFragment : Node , ParentNode {
+//	mixin ParentNodeMixin;
+//	mixin NodeImpl;
+
+//	override public string toString() {
+//	    import std.algorithm : map;
+//	    import std.array : join , array;
+//	    return this.childNodes().map!(n => n.toString() ).array().join();
+//	}
+//}
+
+//private mixin template NodeImpl() {
+//	override public ushort nodeType() {
+//		return Node.DOCUMENT_FRAGMENT_NODE;
+//	}
+
+//	override public string nodeName() {
+//		return "#document-fragment";
+//	}
+
+//	override @property public string nodeValue() {
+//		return null;
+//	}
+
+//	override @property public string nodeValue(string value){
+//		return null;
+//	}
+
+//	override public string textContent() {
+//	  import std.algorithm : map , filter;
+//	  import std.array : join , array;
+//	  return this.childNodes().map!(n => n.textContent()).array().join(" ");
+//	}
+//}
