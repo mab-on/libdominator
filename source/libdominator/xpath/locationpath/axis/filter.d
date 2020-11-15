@@ -7,6 +7,9 @@ import libdominator.xpath.nodeset;
 
 size_t filter(NodeList context_nodes, Axis axis  , out Nodeset output ) {
 	foreach(Node context_node ; context_nodes) {
+		if(context_node is null) {
+			continue;
+		}
 		final switch(axis)
 		{
 			case Axis.self:
@@ -73,7 +76,7 @@ size_t filter(NodeList context_nodes, Axis axis  , out Nodeset output ) {
 				break;
 
 			case Axis.parent:
-				if(context_node.hasParent)
+				if(context_node.hasParent())
 				{
 					output ~= context_node.parentNode;
 				}
@@ -85,35 +88,32 @@ size_t filter(NodeList context_nodes, Axis axis  , out Nodeset output ) {
 			* excluding any ancestors and excluding attribute nodes and namespace nodes
 			*/
 			case Axis.preceding:
-				if(context_node.hasParent)
-				{
-					foreach( parent_sibling ; context_node.parentNode.getSiblings() )
-					{
-						if( parent_sibling is context_node.parentNode )
-						{
-							break;
-						}
-						foreach( preceding ; parent_sibling.getDescendants() )
-						{
-							output ~= preceding;
-						}
+				if( ! context_node.hasParent()) {
+					break;
+				}
+				foreach( parent_sibling ; context_node.parentNode.getSiblings() ) {
+					if( parent_sibling is context_node.parentNode ) {
+						break;
+					}
+					foreach( preceding ; parent_sibling.getDescendants() ) {
+						output ~= preceding;
 					}
 				}
+
 				break;
 
 			case Axis.following:
+				if( ! context_node.hasParent()) {
+					break;
+				}
 				bool isFollowing = false;
-				foreach( parent_sibling ; context_node.parentNode.getSiblings() )
-				{
-					if( isFollowing )
-					{
-						foreach( following ; parent_sibling.getDescendants() )
-						{
+				foreach( parent_sibling ; context_node.parentNode.getSiblings() ) {
+					if( isFollowing ) {
+						foreach( following ; parent_sibling.getDescendants() ) {
 							output ~= following;
 						}
 					}
-					else if( parent_sibling is context_node.parentNode )
-					{
+					else if( parent_sibling is context_node.parentNode ) {
 						isFollowing = true;
 					}
 				}

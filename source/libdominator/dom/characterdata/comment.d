@@ -1,6 +1,8 @@
 module libdominator.dom.characterdata.comment;
 
+import libdominator.dom.node.attribute;
 import libdominator.dom.characterdata.characterdata;
+import libdominator.dom.node.node;
 
 class Comment : CharacterData
 {
@@ -10,9 +12,9 @@ class Comment : CharacterData
   }
 
   override public ushort nodeType()
-  { return 8; }
+  { return Node.COMMENT_NODE; }
 
-  override public string outerHTML()
+  override public string toString()
   {
     import std.algorithm : map;
     import std.array : join , array;

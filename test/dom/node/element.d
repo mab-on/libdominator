@@ -33,6 +33,7 @@ unittest
 /// element.firstElementChild
 unittest {
     import libdominator.dom.parser;
+    import std.format : format;
 
     auto doc = `<root>
       first-Child
@@ -45,8 +46,8 @@ unittest {
       </element>
     </root>`.parse();
 
-    assert( doc.firstChild.textContent == "first-Child" );
-    assert( doc.firstElementChild.textContent == "first-ElementChild" );
+    assert( doc.documentElement.firstChild.textContent == "first-Child" , format!("got unexpected '%s'")(doc.firstChild) );
+    assert( doc.documentElement.firstElementChild.textContent == "first-ElementChild" );
   }
 
 /// element.empty_element

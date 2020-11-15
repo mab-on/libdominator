@@ -10,10 +10,23 @@ struct LocationPath
 {
 	LocationStep[] steps;
 }
+
+Nodeset evaluate( Node context, LocationPath path )
+{
+	return evaluate([context], path);
+}
+
+Nodeset evaluate( NodeList context_nodes, LocationPath path )
+{
+	Nodeset result;
+	evaluate(context_nodes, path, result);
+	return result;
+}
+
 /**
 * evaluates a XPath-LocationPath against a Node
 */
-void evaluate( NodeList context_nodes, LocationPath path, ref Nodeset output ) {
+private void evaluate( NodeList context_nodes, LocationPath path, ref Nodeset output ) {
 	import std.stdio;
 	Nodeset stepHits;
 	if( 0 < filter(context_nodes, path.steps[0], stepHits) ) {
@@ -24,16 +37,4 @@ void evaluate( NodeList context_nodes, LocationPath path, ref Nodeset output ) {
 			evaluate(stepHits, path, output);
 		}
 	}
-}
-
-Nodeset evaluate( NodeList context_nodes, LocationPath path )
-{
-	Nodeset result;
-	evaluate(context_nodes, path, result);
-	return result;
-}
-
-Nodeset evaluate( Node context, LocationPath path )
-{
-	return evaluate([context], path);
 }

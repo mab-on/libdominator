@@ -1,9 +1,13 @@
 module test.test;
+
+import std.format;
+import std.stdio;
+
 import libdominator;
 
 unittest
 {
-	Node doc =
+	Document doc =
 	`<root>
 		<tag_a>
 			<p>preceding A</p>
@@ -24,18 +28,20 @@ unittest
 			<p id="p_ba">following A</p>
 			<p id="p_bb">following B</p>
 		</tag_b>
-	</root>`.parse;
+	</root>`.parse();
 
 	//setup filter
 	LocationPath xPath;
 	xPath.steps ~= LocationStep( Axis.child , new Element("tag") );
 	xPath.steps ~= LocationStep( Axis.child , new Element("sub") );
 	xPath.steps ~= LocationStep( Axis.following , new Element("p") );
+	writeln(xPath.expression());
 
-	Nodeset hits = doc.evaluate(xPath);
+	Nodeset hits = doc.documentElement.evaluate(xPath);
+	assert( hits.length == 2 , format!"unexpected %d"(hits.length));
+
 	Node p_ba = hits[0];
 
-	assert( hits.length == 2 );
 	assert( p_ba.getSiblings.length == 2 );
 
 	assert( p_ba.parentNode.nodeName == "tag_b" );
@@ -45,12 +51,9 @@ unittest
 	assert( p_ba.hasChildNodes );
 	Element p_ba_element = cast(Element)p_ba;
 	assert( p_ba_element );
-	assert( ! p_ba_element.hasChildren );
 
 	p_ba_element.insertBefore( (new Element("a")).setAttribute( Attribute("href","#first") ) , p_ba_element.firstChild );
 	p_ba_element.appendChild( (new Element("a")).setAttribute( Attribute("href","#last") ) );
-
-	assert( p_ba_element.hasChildren );
 
 	Element child = cast(Element)p_ba_element.firstChild;
 	assert( child && child.getAttribute("href") == "#first" );
@@ -65,10 +68,10 @@ unittest
 	import std.path : dirName;
 	import std.range;
 
-	Node doc = readText( dirName(__FILE_FULL_PATH__)~"/dummy.html" ).parse;
+	Node doc = readText( dirName(__FILE_FULL_PATH__)~"/dummy.html" ).parse();
 
 	auto test_node = new Element("li");
-	test_node.addAttribute( Attribute("id" , "li-1-o2-1") );
+	test_node.attributes ~=  Attribute("id" , "li-1-o2-1") ;
 
 	LocationPath xPath;
 	xPath.steps ~= LocationStep( Axis.descendant_or_self , test_node ); /* //li[@id="li-1-o2-1"]/ */

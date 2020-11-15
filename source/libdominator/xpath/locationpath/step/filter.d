@@ -5,6 +5,7 @@ import libdominator.dom.node;
 import libdominator.dom.nodetree.nodelist;
 import libdominator.xpath.locationpath.step.step;
 import libdominator.xpath.nodeset;
+import libdominator.xpath.errors;
 
 /**
 * TODO: implement attribute-axis and namespace-axis node tests
@@ -18,48 +19,62 @@ size_t filter(NodeList context_nodes, LocationStep step, out Nodeset output )
 		return 0;
 	}
 
-	bool nodecmp(Node context , Node test)
-	{
-		import std.uni : icmp;
-		if(0 == icmp( context.nodeName , test.nodeName ))
-		{
-			if( test.hasAttributes )
-			{
-				if( ! context.hasAttributes) return false;
-
-				bool hitHook;
-				foreach( test_attr ; test.getAttributes() )
-				{
-					hitHook = false;
-					foreach( context_attr ; context.getAttributes() )
-					{
-						if
-						(
-							test_attr.name == context_attr.name
-							&& ( test_attr.value.length ? test_attr.value == context_attr.value : true)
-						)
-						{
-							hitHook = true;
-							break;
-						}
-					}
-					if( ! hitHook ) return false;
-				}
-				return true;
-			}
-			else
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	foreach(Node axisNode ; axisHits) {
-		if( nodecmp(axisNode, step.nodeTest) ) {
+
+		if( cmp(axisNode, step.nodeTest) ) {
 			output ~= axisNode;
 		}
 	}
 	return output.length;
+}
+
+private bool cmp(Node context , Node test) {
+	import std.uni : icmp;
+
+	if( typeid(context) != typeid(test) ) {
+		return false;
+	}
+
+	if(0 != icmp( context.nodeName , test.nodeName )) {
+		return false;
+	}
+
+	if( typeid(test) == typeid(Element) ) {
+		return cmpElement(cast(Element)context, cast(Element)test);
+	}
+
+	if( typeid(test) == typeid(Document) ) {
+		throw new XPathException("Hmmm....");
+		//return return cmp(context, test);
+	}
+
+	return true;
+}
+
+private bool cmpElement(Element context , Element test) {
+
+	if( ! test.hasAttributes() ) {
+		return true;
+	}
+
+	bool hitHook;
+	foreach( test_attr ; test.getAttributes() )
+	{
+		hitHook = false;
+		foreach( context_attr ; context.getAttributes() )
+		{
+			if
+			(
+				test_attr.name == context_attr.name
+				&& ( test_attr.value.length ? test_attr.value == context_attr.value : true)
+			)
+			{
+				hitHook = true;
+				break;
+			}
+		}
+		if( ! hitHook ) return false;
+	}
+
+	return true;
 }

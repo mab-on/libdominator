@@ -7,216 +7,106 @@ import libdominator.dom.node.node;
 import libdominator.dom.node.parentnode;
 import libdominator.dom.nodetree.nodelist;
 
-class Element : Node, ParentNode
-{
-	private string _localName;
-	private string _prefix;
+class Element : Node, ParentNode {
+  mixin ParentNodeMixin;
+  mixin NodeImpl;
 
-  private NodeList children;
+  public Attribute[] attributes;
 
-  private Attribute[] attributes;
-
- this(string tag) {
+  this(string tag) {
     import std.algorithm.searching : findSplit;
-		if(auto result = tag.findSplit(":"))
-		{
-			this._prefix = result[0];
-			this._localName = result[2];
-		}
-		else
-		{
-			this._prefix = "";
-			this._localName = tag;
-		}
-  }
-
-  override public ushort nodeType()
-  { return 1; }
-
-  override public string nodeName() {
-  	return this._prefix.length ? this._prefix ~ ":" ~ this._localName : this._localName;
-  }
-
-
-
-  override public bool hasChildNodes() {
-    return this.children.length ? true : false;
-  }
-
-  override public NodeList childNodes() {
-    NodeList nodes;
-    foreach(Node pNode ; this.children) {
-      if(pNode !is  null) { nodes ~= pNode; }
-    }
-    return nodes;
-  }
-
-  override public Node firstChild()
-  {
-  	return this.children.length ? this.children[0] : null;
-  }
-
-
-  public Element firstElementChild() {
-    foreach( node ; this.children ) {
-      if( typeid(node) is typeid(Element) ) return cast(Element)node;
-    }
-    return null;
-  }
-
-  override public Node lastChild()
-  {
-  	return this.children.length ? this.children[$-1] : null;
-  }
-
-  override public string textContent()
-  {
-    import std.algorithm : map , filter;
-    import std.array : join , array;
-    return this.childNodes().map!(n => n.textContent()).array().join(" ");
-  }
-
-  override public string outerHTML()
-  {
-    import std.algorithm : map;
-    import std.array : join , array;
-    return
-    "<" ~ this.nodeName
-    ~ ( this.attributes.length ? " " ~ this.attributes.map!(a => a.toString() ).array().join(' ') : "" )
-    ~ ">"
-    ~ this.childNodes().map!(n => n.outerHTML() ).array().join()
-    ~ ( this.empty_element ? "" : "</" ~ this.nodeName ~ ">" );
-  }
-
-  override string toString()
-  {
-    return this.outerHTML();
-  }
-
-
-	public string tagName() { return this.nodeName(); }
-
-	public string localName() { return this._localName; }
-
-	public string prefix() { return this._prefix; }
-
-  override @property public string nodeValue()
-  { return null; }
-
-  override @property public string nodeValue(string value)
-  { return null; }
-
-
-  override public Node appendChild(Node child) {
-    import std.algorithm : remove;
-    if( child.parentNode !is null)
+    if(auto result = tag.findSplit(":"))
     {
-      child.parentNode.removeChild(child);
+      this._prefix = result[0];
+      this._localName = result[2];
     }
-    this.children ~= child;
-    child.setParent(this);
-    return child;
-  }
-
-  override public Node insertBefore(Node insert , Node refChild)
-  {
-  	import std.algorithm.searching : countUntil;
-  	import std.array : insertInPlace;
-
-  	auto i = this.children.countUntil!(child => child is refChild);
-  	if( i != -1 )
-  	{
-  		this.children.insertInPlace( i , insert );
-  	}
-  	else
-  	{
-
-  	}
-
-	return insert;
-  }
-
-  override public Node removeChild(Node child)
-  {
-    import std.algorithm : remove;
-    foreach( i , candidate ; this.children )
+    else
     {
-      if( child is candidate )
-      {
-        this.children = this.children.remove(i);
-        return child;
-      }
-    }
-    return null;
-  }
-
-  public bool hasChildren()
-  {
-  	import std.algorithm.searching : any;
-  	if( ! this.children.length ) return false;
-
-  	return this.children.any!(a => cast(Element)a);
-  }
-
-
-  private void collectDescendants(Node node ,ref NodeList nodes) {
-    foreach(Node childNode ; node.childNodes()) {
-      nodes ~= childNode;
-      collectDescendants(childNode , nodes);
+      this._prefix = "";
+      this._localName = tag;
     }
   }
 
-  override public NodeList getDescendants() {
-    NodeList nodes;
-    collectDescendants(this , nodes);
-    return nodes;
+  // TODO readonly attribute DOMString? namespaceURI; //https://dom.spec.whatwg.org/#dom-element-namespaceuri
+
+  private string _prefix;
+  public string prefix() {
+    //https://dom.spec.whatwg.org/#dom-element-prefix
+    return this._prefix;
   }
 
-  override public Attribute[] getAttributes()
-  {
+  private string _localName;
+  public string localName() {
+    //https://dom.spec.whatwg.org/#dom-element-localname
+    return this._localName;
+  }
+
+  public string tagName() {
+    import std.string : toUpper;
+    //https://dom.spec.whatwg.org/#dom-element-tagname
+    return this.nodeName().toUpper();
+  }
+
+  // TODO [CEReactions] attribute DOMString id;
+  // TODO [CEReactions] attribute DOMString className;
+  // TODO [SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
+  // TODO [CEReactions, Unscopable] attribute DOMString slot;
+
+  final public bool hasAttributes() {
+    // https://dom.spec.whatwg.org/#dom-element-hasattributes
+    return this.attributes.length ? true : false;
+  }
+
+  final public Attribute[] getAttributes() {
+    // https://dom.spec.whatwg.org/#dom-element-attributes
     return this.attributes;
   }
 
-  public string getAttribute(string attributeName)
-  {
-  	import std.algorithm.iteration : filter;
+  // TODO sequence<DOMString> getAttributeNames(); //https://dom.spec.whatwg.org/#dom-element-getattributenames
 
-  	auto r = this.attributes.filter!(a => a.name == attributeName);
-		return r.empty ? "" : r.front.value;
+  final public string getAttribute(string attributeName) {
+    // https://dom.spec.whatwg.org/#dom-element-getattribute
+    import std.algorithm.iteration : filter;
+
+    auto r = this.attributes.filter!(a => a.name == attributeName);
+    return r.empty ? "" : r.front.value;
   }
 
-  override public bool hasAttributes()
-  {
-		return this.attributes.length ? true : false;
-  }
+  // TODO DOMString? getAttributeNS(DOMString? namespace, DOMString localName); //https://dom.spec.whatwg.org/#dom-element-getattributens
 
-  public void addAttribute(Attribute attribute)
-  {
-    this.attributes ~= attribute;
-  }
-
-		/**
-		* See_Also: https://developer.mozilla.org/en-US/docs/Web/API/Element/setAttribute
-		*/
-  public Element setAttribute(Attribute attribute)
-  {
-  	import std.algorithm.searching : countUntil;
-		ptrdiff_t attr_index = this.attributes.countUntil!(a => a.name() == attribute.name());
-		if(attr_index == -1)
-		{
-			this.attributes ~= attribute;
-		}
-    else
-    {
-			this.attributes[attr_index] = attribute;
+  final public auto setAttribute(Attribute attribute) {
+    // https://dom.spec.whatwg.org/#dom-element-setattribute
+    import std.algorithm.searching : countUntil;
+    ptrdiff_t attr_index = this.attributes.countUntil!(a => a.name() == attribute.name());
+    if(attr_index == -1) {
+      this.attributes ~= attribute;
+    }
+    else {
+      this.attributes[attr_index] = attribute;
     }
     return this;
   }
 
-  public void setAttributes(Attribute[] attributes)
-  {
-    this.attributes = attributes;
-  }
+  // TODO [CEReactions] undefined setAttributeNS(DOMString? namespace, DOMString qualifiedName, DOMString value);
+  // TODO [CEReactions] undefined removeAttribute(DOMString qualifiedName);
+  // TODO [CEReactions] undefined removeAttributeNS(DOMString? namespace, DOMString localName);
+  // TODO [CEReactions] boolean toggleAttribute(DOMString qualifiedName, optional boolean force);
+  // TODO boolean hasAttribute(DOMString qualifiedName);
+  // TODO boolean hasAttributeNS(DOMString? namespace, DOMString localName);
+  // TODO Attr? getAttributeNode(DOMString qualifiedName);
+  // TODO Attr? getAttributeNodeNS(DOMString? namespace, DOMString localName);
+  // TODO [CEReactions] Attr? setAttributeNode(Attr attr);
+  // TODO [CEReactions] Attr? setAttributeNodeNS(Attr attr);
+  // TODO [CEReactions] Attr removeAttributeNode(Attr attr);
+  // TODO ShadowRoot attachShadow(ShadowRootInit init);
+  // TODO readonly attribute ShadowRoot? shadowRoot;
+  // TODO Element? closest(DOMString selectors);
+  // TODO boolean matches(DOMString selectors);
+  // TODO HTMLCollection getElementsByTagName(DOMString qualifiedName);
+  // TODO HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
+  // TODO HTMLCollection getElementsByClassName(DOMString classNames);
+
+  // --------------------- Interface Spec END  ---------------------
 
   protected bool _empty_element = false;
   /**
@@ -229,4 +119,51 @@ class Element : Node, ParentNode
   ///ditto
   @property public bool empty_element(bool value)
   { return this._empty_element = value; }
+
+  /**
+  * Gets the serialized HTML fragment describing the element including its descendants.
+  *
+  * See_Also:
+  *   https://developer.mozilla.org/en-US/docs/Web/API/Element/outerHTML
+  */
+  public string outerHTML() {
+    return this.toString();
+  }
+
+  override public string toString() {
+    import std.algorithm : map;
+    import std.array : join , array;
+    return
+    "<" ~ this.nodeName
+    ~ ( this.attributes.length ? " " ~ this.attributes.map!(a => a.toString() ).array().join(' ') : "" )
+    ~ ">"
+    ~ this.childNodes().map!(n => n.toString() ).array().join()
+    ~ ( this.empty_element ? "" : "</" ~ this.nodeName ~ ">" );
+  }
+
+}
+
+private mixin template NodeImpl() {
+
+  override public ushort nodeType() {
+    return Node.ELEMENT_NODE;
+  }
+
+  override public string nodeName() {
+    return this._prefix.length ? this._prefix ~ ":" ~ this._localName : this._localName;
+  }
+
+  override @property public string nodeValue() {
+    return null;
+  }
+
+  override @property public string nodeValue(string value){
+    return null;
+  }
+
+  override public string textContent() {
+      import std.algorithm : map , filter;
+      import std.array : join , array;
+      return this.childNodes().map!(n => n.textContent()).array().join(" ");
+  }
 }

@@ -1,10 +1,11 @@
 module libdominator.dom.characterdata.characterdata;
 
+import libdominator.dom.errors;
+import libdominator.dom.node.attribute;
 import libdominator.dom.node;
 import libdominator.dom.nodetree.nodelist;
-import libdominator.dom.domexception;
 
-class CharacterData : Node
+abstract class CharacterData : Node
 {
   protected
   	string
@@ -29,11 +30,8 @@ class CharacterData : Node
   override public string textContent()
   { return this.nodeValue(); }
 
-  override public string outerHTML()
+  override public string toString()
   { return this.textContent(); }
-
-  override public ushort nodeType()
-  { return 0; }
 
   final override public bool hasChildNodes()
   { return false; }
@@ -59,11 +57,4 @@ class CharacterData : Node
 
   final override public Node insertBefore(Node insert , Node refChild)
   { return null; }
-
-  override public Attribute[] getAttributes()
-  { return []; }
-
-  override public bool hasAttributes()
-  { return false; }
-
 }

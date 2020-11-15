@@ -3,17 +3,16 @@ module libdominator.dom.parser.parser;
 import libdominator.dom.node;
 import libdominator.dom.characterdata;
 
-public Element parse(string haystack)
+public Document parse(string haystack)
 {
 		import std.algorithm.searching : canFind;
+        import std.uni : icmp, toUpper;
         import std.ascii : isWhite , isAlphaNum , isAlpha;
         import std.container.slist;
         import std.string : strip;
 
-		Element documentFragment;
-        if(haystack.length == 0) { return documentFragment; }
-
-
+		Document document = new Document();
+        if(haystack.length == 0) { return document; }
 
 		auto nodestack = SList!Node();
 		auto empty_elements = SList!Node();
@@ -30,6 +29,16 @@ public Element parse(string haystack)
 		string _name;
 		Attribute[] _attributes;
 		string _text;
+
+        //skip whitespaces
+        while(needle < haystack.length && haystack[needle].isWhite) { needle++; }
+        if(needle >= haystack.length) { return document; } //EOF
+
+        needleProbe = tryDoctype(needle , haystack , document.doctype);
+        if( needleProbe ) {
+            needle = needleProbe;
+        }
+
         do {
             if(haystack[needle] == '<') {
 
@@ -39,9 +48,9 @@ public Element parse(string haystack)
 					needle = needleProbe;
                 	if(_name != nodestack.front().nodeName())
                 	{
-                		if( canFind!( (Node a , string b) => a.nodeName == b )(nodestack[] , _name) )
+                		if( canFind!( (Node a , string b) => 0 == icmp(a.nodeName(), b) )(nodestack[] , _name) )
                 		{
-							while( _name != nodestack.front().nodeName() &&  !nodestack.empty )
+							while( icmp(_name, nodestack.front().nodeName()) != 0 &&  !nodestack.empty )
 							{
 								Element non_closing = cast(Element)nodestack.front();
 								non_closing.empty_element = true;
@@ -87,13 +96,16 @@ public Element parse(string haystack)
                 needleProbe = tryElementOpener(_name , _attributes ,  needle , haystack);
                 if( needleProbe )
                 {
-					Element node = new Element(_name);
-					node.setAttributes(_attributes);
-					if(documentFragment is null)
-					{
-						documentFragment = node;
-					}
-					nodestack.insert(node);
+                    if( 0 == icmp(document.doctype.nodeName() , "html") ) {
+                        _name = toUpper(_name);
+                    }
+                    Element node = new Element(_name);
+                    node.attributes = _attributes;
+                    if(document.documentElement is null)
+                    {
+                        document.documentElement = node;
+                    }
+                    nodestack.insert(node);
 
                     needle = needleProbe;
                     if(state & ParserStates.inComment) { /*hmmmm...? */ }
@@ -117,7 +129,38 @@ public Element parse(string haystack)
             needle++;
         } while(needle < haystack.length);
 
-	return documentFragment;
+	return document;
+}
+
+private size_t tryDoctype(size_t needle , ref string haystack , DocumentType doctype) {
+    import std.uni : sicmp;
+    import std.ascii : isWhite , isAlphaNum;
+    size_t iNeedle;
+
+    if( 9+needle < haystack.length && 0 == sicmp(haystack[needle..9+needle], "<!DOCTYPE") ) {
+        needle += 9;
+
+        //skip whitespaces
+        while(needle < haystack.length && haystack[needle].isWhite) { needle++; }
+        if(needle >= haystack.length) { return 0; } //EOF
+
+
+        //The name is AlphaNumeric
+        iNeedle = needle;
+        while(needle < haystack.length && haystack[needle].isAlphaNum) { needle++; }
+        if(needle >= haystack.length) { return 0; } //EOF
+
+        doctype.name = haystack[ iNeedle..needle ];
+
+        while(needle < haystack.length) {
+            if(haystack[needle] == '<') return 0;
+            if(haystack[needle] == '>') return 1+needle;
+            needle++;
+        }
+        if(needle >= haystack.length) { return 0; } //EOF
+    }
+
+    return 0;
 }
 
 private size_t tryText(size_t needle , ref string haystack , out string text)
@@ -140,7 +183,6 @@ private size_t tryText(size_t needle , ref string haystack , out string text)
 private size_t tryElementOpener(out string name, out Attribute[] attributes, size_t needle, ref string haystack)
 {
     import std.ascii : isWhite , isAlphaNum , isAlpha;
-    import std.uni : toLower;
     enum ParserStates : ubyte {
         name = 1,
         key = 2,
@@ -175,7 +217,7 @@ private size_t tryElementOpener(out string name, out Attribute[] attributes, siz
     }
     nameCoord = needle;
 
-    //The name can contain letters, digits, hyphens, underscores, and periods
+    //The name contains letters, digits, hyphens, underscores, and periods
     for(; needle < haystack.length && !haystack[needle].isWhite ; ++needle) {
         if(
             ! haystack[needle].isAlphaNum
@@ -194,7 +236,7 @@ private size_t tryElementOpener(out string name, out Attribute[] attributes, siz
     }
     if(needle >= haystack.length) { return 0; } //EOF
 
-    name = haystack[nameCoord..needle].toLower;
+    name = haystack[nameCoord..needle];
     state |= ParserStates.name;
 
     /*
@@ -314,7 +356,6 @@ private size_t tryElementOpener(out string name, out Attribute[] attributes, siz
 
 private size_t tryElementTerminator(out string name , ref string haystack , size_t needle) {
     import std.ascii : isWhite;
-    import std.uni : toLower;
     if( haystack[needle] != '<' ) {return 0;}
 
     size_t[2] nameCoord;
@@ -331,7 +372,7 @@ private size_t tryElementTerminator(out string name , ref string haystack , size
         needle++
     ) {
         if(haystack[needle] == '>') {
-            name = haystack[nameCoord[0]..needle].toLower;
+            name = haystack[nameCoord[0]..needle];
             needle++;
             return needle;
         }
@@ -339,7 +380,7 @@ private size_t tryElementTerminator(out string name , ref string haystack , size
     nameCoord[1] = needle;
     for(; needle < haystack.length && haystack[needle].isWhite ; needle++) {}
     if(haystack[needle] == '>') {
-        name = haystack[nameCoord[0]..nameCoord[1]].toLower;
+        name = haystack[nameCoord[0]..nameCoord[1]];
         needle++;
         return needle;
     }
