@@ -1,4 +1,6 @@
-module libdominator.dom.node.Document;
+module libdominator.dom.node.document;
+
+import std.encoding;
 
 import libdominator.dom.node.attribute;
 import libdominator.dom.node.documenttype;
@@ -16,8 +18,8 @@ class Document : Node, ParentNode {
 	mixin ParentNodeMixin;
 	mixin SpecImpl;
 
-	this() {
-		this.doctype = new DocumentType();
+	public this() {
+		this.encoding = new EncodingSchemeUtf8();
 	}
 
 	override public string toString() {
@@ -62,13 +64,14 @@ private mixin template NodeImpl() {
 
 private mixin template SpecImpl() {
 	import libdominator.types;
-	import std.encoding;
 
-	EncodingScheme encoding = new EncodingSchemeUtf8();
 	DOMString contentType = "application/xml";
 	USVString URL = "about:blank";
 	USVString documentURI = "";
 	DOMString compatMode = "no-quirks";
+	EncodingScheme encoding;
+	DocumentType doctype;
+	Element documentElement;
 
 	// TODO [SameObject] readonly attribute DOMImplementation implementation; // https://dom.spec.whatwg.org/#domimplementation
 
@@ -76,8 +79,6 @@ private mixin template SpecImpl() {
 	public USVString charset() { return this.characterSet(); }
 	public USVString inputEncoding() { return this.characterSet(); }
 
-	DocumentType doctype;
-	Element documentElement;
 	// TODO HTMLCollection getElementsByTagName(DOMString qualifiedName);
 	// TODO HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
 	// TODO HTMLCollection getElementsByClassName(DOMString classNames);

@@ -1,6 +1,7 @@
 module libdominator.dom.node.node;
 
 import libdominator.dom.node.attribute;
+import libdominator.dom.node.document;
 import libdominator.dom.node.element;
 import libdominator.dom.nodetree.nodelist;
 
@@ -24,8 +25,12 @@ class Node
 	abstract public string nodeName(); //https://dom.spec.whatwg.org/#dom-node-nodename
 
 	//TODO readonly attribute USVString baseURI;
-	//TODO readonly attribute boolean isConnected;
-	//TODO readonly attribute Document? ownerDocument; // https://dom.spec.whatwg.org/#dom-node-ownerdocument
+
+	final public bool isConnected() {
+		return this.ownerDocument !is null;
+	}
+	public Document ownerDocument; //https://dom.spec.whatwg.org/#dom-node-ownerdocument
+
 	//TODO Node getRootNode(optional GetRootNodeOptions options);
 
 	final public Node parentNode() {

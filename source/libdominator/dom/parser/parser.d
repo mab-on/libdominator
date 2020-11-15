@@ -6,7 +6,7 @@ import libdominator.dom.characterdata;
 public Document parse(string haystack)
 {
 		import std.algorithm.searching : canFind;
-        import std.uni : icmp, toUpper;
+        import std.uni : icmp;
         import std.ascii : isWhite , isAlphaNum , isAlpha;
         import std.container.slist;
         import std.string : strip;
@@ -34,8 +34,10 @@ public Document parse(string haystack)
         while(needle < haystack.length && haystack[needle].isWhite) { needle++; }
         if(needle >= haystack.length) { return document; } //EOF
 
-        needleProbe = tryDoctype(needle , haystack , document.doctype);
+        auto doctype = new DocumentType();
+        needleProbe = tryDoctype(needle, haystack, doctype);
         if( needleProbe ) {
+            document.doctype = doctype;
             needle = needleProbe;
         }
 
@@ -96,11 +98,9 @@ public Document parse(string haystack)
                 needleProbe = tryElementOpener(_name , _attributes ,  needle , haystack);
                 if( needleProbe )
                 {
-                    if( 0 == icmp(document.doctype.nodeName() , "html") ) {
-                        _name = toUpper(_name);
-                    }
                     Element node = new Element(_name);
                     node.attributes = _attributes;
+                    node.ownerDocument = document;
                     if(document.documentElement is null)
                     {
                         document.documentElement = node;
@@ -132,7 +132,7 @@ public Document parse(string haystack)
 	return document;
 }
 
-private size_t tryDoctype(size_t needle , ref string haystack , DocumentType doctype) {
+private size_t tryDoctype(size_t needle, ref string haystack, DocumentType doctype) {
     import std.uni : sicmp;
     import std.ascii : isWhite , isAlphaNum;
     size_t iNeedle;

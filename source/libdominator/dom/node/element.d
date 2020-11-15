@@ -150,7 +150,11 @@ private mixin template NodeImpl() {
   }
 
   override public string nodeName() {
-    return this._prefix.length ? this._prefix ~ ":" ~ this._localName : this._localName;
+    import std.uni : toUpper, sicmp;
+    auto nodeName = this._prefix.length ? this._prefix ~ ":" ~ this._localName : this._localName;
+    return this.isConnected() && ownerDocument.doctype !is null && 0 == sicmp(ownerDocument.doctype.nodeName() , "html")
+      ? toUpper(nodeName)
+      : nodeName;
   }
 
   override @property public string nodeValue() {
