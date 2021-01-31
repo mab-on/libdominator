@@ -58,3 +58,40 @@ unittest
   elem.empty_element = true;
   assert( elem.empty_element == true );
 }
+
+unittest {
+  auto div = new Element("div");
+  
+  assert( ! div.hasAttribute("id"));
+  div.id = "bla";
+  assert(div.hasAttribute("id"));
+  assert(div.id == "bla");
+
+  div.id = "fasel";
+  assert(div.id == "fasel");
+}
+
+unittest {
+  auto div = new Element("div");
+  assert(div.className == "");
+  assert(div.classList.length == 0);
+
+  div.className = "test";
+  assert(div.className == "test");
+  assert(div.classList.length == 1);
+
+  div.className = "test 12  123";
+  assert(div.className == "test 12  123");
+  assert(div.classList.length == 3);
+}
+
+unittest {
+  auto div = new Element("div");
+  assert( ! div.hasAttributes());
+
+  div.setAttribute("bla","fasel");
+  assert(div.hasAttributes());
+
+  div.removeAttribute("bla");  
+  assert( ! div.hasAttributes());
+}

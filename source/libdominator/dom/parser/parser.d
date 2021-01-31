@@ -1,7 +1,10 @@
 module libdominator.dom.parser.parser;
 
+import std.stdio, std.typecons;
 import libdominator.dom.node;
 import libdominator.dom.characterdata;
+
+alias TryElemRes = Tuple!(size_t, "needle", Element, "element");
 
 public Document parse(string haystack)
 {
@@ -27,7 +30,6 @@ public Document parse(string haystack)
         size_t needle;
 
 		string _name;
-		Attribute[] _attributes;
 		string _text;
 
         //skip whitespaces
@@ -95,19 +97,17 @@ public Document parse(string haystack)
                     continue;
                 }
 
-                needleProbe = tryElementOpener(_name , _attributes ,  needle , haystack);
-                if( needleProbe )
+                TryElemRes eRes = tryElementOpener(needle, haystack);
+                if( eRes.needle )
                 {
-                    Element node = new Element(_name);
-                    node.attributes = _attributes;
-                    node.ownerDocument = document;
+                    eRes.element.ownerDocument = document;
                     if(document.documentElement is null)
                     {
-                        document.documentElement = node;
+                        document.documentElement = eRes.element;
                     }
-                    nodestack.insert(node);
+                    nodestack.insert(eRes.element);
 
-                    needle = needleProbe;
+                    needle = eRes.needle;
                     if(state & ParserStates.inComment) { /*hmmmm...? */ }
 
                     continue;
@@ -180,7 +180,200 @@ private size_t tryText(size_t needle , ref string haystack , out string text)
 	return needle;
 }
 
-private size_t tryElementOpener(out string name, out Attribute[] attributes, size_t needle, ref string haystack)
+private TryElemRes tryElementOpener(size_t needle, ref string haystack)
+{
+    import std.ascii : isWhite , isAlphaNum , isAlpha;
+    enum ParserStates : ubyte {
+        name = 1,
+        key = 2,
+        value = 4,
+        err = 8,
+        ready = 16
+    }
+    ubyte state = 0;
+    string name;
+    char inQuote = 0x00;
+    size_t nameCoord;
+    size_t[2] keyCoord, valCoord;
+
+    if(haystack[needle] != '<') {
+        return TryElemRes(0, null);
+    }
+
+    needle++;
+
+    /*
+    * parse the elements name
+    */
+    //first, skip whitespaces
+    while(needle < haystack.length && haystack[needle].isWhite) { needle++; }
+    if(needle >= haystack.length) { 
+         //EOF
+        return TryElemRes(0, null); 
+    }
+
+    //The name begins with a underscore or a alphabetical character.
+    if(
+        ! haystack[needle].isAlpha
+        && ! haystack[needle] == '_'
+    ) {
+        return TryElemRes(0, null);
+    }
+    nameCoord = needle;
+
+    //The name contains letters, digits, hyphens, underscores, and periods
+    for(; needle < haystack.length && !haystack[needle].isWhite ; ++needle) {
+        if(
+            ! haystack[needle].isAlphaNum
+            &&  haystack[needle] != '-'
+            &&  haystack[needle] != '_'
+            &&  haystack[needle] != '.'
+            &&  haystack[needle] != ':'
+        ) {
+            if(haystack[needle] == '>') {
+                state |= ParserStates.ready;
+                break;
+            } else {
+                return TryElemRes(0, null);
+            }
+        }
+    }
+    if(needle >= haystack.length) { 
+        return TryElemRes(0, null);
+    } //EOF
+
+    name = haystack[nameCoord..needle];
+    state |= ParserStates.name;
+    auto element = new Element(name);
+
+    /*
+    * Parse attributes
+    */
+    while( ! (state & ParserStates.ready))
+    {
+        //reset state
+        state &= ~(ParserStates.key | ParserStates.value);
+
+        //Check if the next non-whitespace char finishes our job here
+        while(needle < haystack.length && haystack[needle].isWhite){ needle++; }
+        if(needle >= haystack.length) {
+            //EOF
+            return TryElemRes(0, null); 
+        }
+        if(haystack[needle] == '>')
+        {
+            state |= ParserStates.ready;
+            return TryElemRes(1+needle, element);
+        }
+
+        /*
+        * Find the attr-key
+        */
+        keyCoord[0] = needle;
+        for(; needle < haystack.length && !haystack[needle].isWhite ; ++needle)
+        {
+            if(haystack[needle] == '>') {
+                state |= ParserStates.ready;
+                break;
+            }
+            if(haystack[needle] == '=') {
+                break;
+            }
+        }
+        if(needle >= haystack.length) { 
+            //EOF
+            return TryElemRes(0, null); 
+        } 
+        keyCoord[1] = needle;
+
+        if(state & ParserStates.ready) {
+            auto attr = new Attr(haystack[keyCoord[0]..keyCoord[1]] , "" , inQuote );
+            element.setAttributeNode(attr);
+        }
+        else
+        {
+            /**
+            * Parse attribute value if exist
+            */
+
+            //skip whitespaces
+            while(needle < haystack.length && haystack[needle].isWhite) { needle++; }
+            if(needle >= haystack.length) { 
+                //EOF
+                return TryElemRes(0, null); 
+            }
+
+            if(haystack[needle] == '>') {
+                //there is no value and this is the end
+                state |= ParserStates.ready;
+                auto attr = new Attr(haystack[keyCoord[0]..keyCoord[1]] , "" , inQuote );
+                element.setAttributeNode(attr);
+                return TryElemRes(1+needle, element);
+            }
+            else if(haystack[needle] == '=')
+            {
+                //here comes the value...
+                needle++;
+                while(needle < haystack.length && haystack[needle].isWhite) { needle++; }
+                if(needle >= haystack.length) { 
+                    return TryElemRes(0, null); 
+                } //EOF
+
+                if(haystack[needle] == '"' || haystack[needle] == '\'' ) {
+                    //quoted value
+                    inQuote = haystack[needle];
+                    needle++;
+                    valCoord[0] = needle;
+                    while(
+                        needle < haystack.length
+                        && (haystack[needle] != inQuote
+                        || ( haystack[needle] == inQuote && haystack[needle-1] == '\\'))
+                    ) {
+                        needle++;
+                    }
+                    valCoord[1] = needle;
+                    needle++;
+                }
+                else //not quoted value
+                {
+                    inQuote = 0x00;
+                    valCoord[0] = needle;
+                    while(
+                        needle < haystack.length
+                        && (
+                            !haystack[needle].isWhite
+                            || ( haystack[needle].isWhite && haystack[needle-1] == '\\')
+                        )
+                    ) {
+                        if(haystack[needle] == '>')
+                        {
+                            state |= ParserStates.ready;
+                            break;
+                        }
+                        needle++;
+                    }
+                    valCoord[1] = needle;
+                }
+            }
+            else //there is no value
+            {
+                valCoord = valCoord.init;
+            }
+            if(keyCoord[1] >= haystack.length || valCoord[1] >= haystack.length) {
+                return TryElemRes(0, null);
+            }
+            auto attr = new Attr(
+                haystack[keyCoord[0]..keyCoord[1]],
+                haystack[valCoord[0]..valCoord[1]],
+                inQuote
+            );
+            element.setAttributeNode(attr);
+        }
+    }
+    return TryElemRes(1+needle, element);
+}
+
+private size_t tryElementOpener_old(out string name, Attr[] attributes, size_t needle, ref string haystack)
 {
     import std.ascii : isWhite , isAlphaNum , isAlpha;
     enum ParserStates : ubyte {
@@ -275,7 +468,7 @@ private size_t tryElementOpener(out string name, out Attribute[] attributes, siz
         keyCoord[1] = needle;
 
         if(state & ParserStates.ready) {
-            attributes ~= Attribute(haystack[keyCoord[0]..keyCoord[1]] , "" , inQuote );
+            attributes ~= new Attr(haystack[keyCoord[0]..keyCoord[1]] , "" , inQuote );
         }
         else
         {
@@ -290,7 +483,7 @@ private size_t tryElementOpener(out string name, out Attribute[] attributes, siz
             if(haystack[needle] == '>') {
                 //there is no value and this is the end
                 state |= ParserStates.ready;
-                attributes ~= Attribute(haystack[keyCoord[0]..keyCoord[1]] , "" , inQuote );
+                attributes ~= new Attr(haystack[keyCoord[0]..keyCoord[1]] , "" , inQuote );
                 needle++;
                 return needle;
             }
@@ -344,7 +537,7 @@ private size_t tryElementOpener(out string name, out Attribute[] attributes, siz
             if(keyCoord[1] >= haystack.length || valCoord[1] >= haystack.length) {
                 return 0;
             }
-            attributes ~= Attribute(
+            attributes ~= new Attr(
                 haystack[keyCoord[0]..keyCoord[1]],
                 haystack[valCoord[0]..valCoord[1]],
                 inQuote

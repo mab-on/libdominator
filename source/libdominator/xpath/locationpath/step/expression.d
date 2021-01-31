@@ -64,7 +64,7 @@ string expression_abbreviated(LocationStep step) {
 	return abbrev
 	~ (
 		(cast(Element)step.nodeTest).hasAttributes()
-			? (cast(Element)step.nodeTest).getAttributes().map!(a => "["~abbreviate(Axis.attribute)~ a.name()~`="`~a.value()~`"]` ).joiner().to!string
+			? (cast(Element)step.nodeTest).getAttributes().map!(a => "["~abbreviate(Axis.attribute)~ a.name~`="`~a.value~`"]` ).joiner().to!string
 			: ""
 	);
 }
@@ -82,7 +82,7 @@ string expression_full(LocationStep step)
 	if( typeid(step.nodeTest) == typeid(Element) && (cast(Element)step.nodeTest).hasAttributes() ) {
 		expr ~= (cast(Element)step.nodeTest)
 			.getAttributes()
-			.map!(a => "[attribute::"~ a.name()~`="`~a.value()~`"]` )
+			.map!(a => "[attribute::"~ a.name~`="`~a.value~`"]` )
 			.joiner()
 			.to!string;
 	}
