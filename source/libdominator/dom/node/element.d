@@ -1,21 +1,26 @@
 module libdominator.dom.node.element;
 
-import std.typecons : Nullable;
+import std.algorithm.searching : findSplit;
+import std.typecons;
 
+import libdominator.dom.errors;
 import libdominator.dom.node.attribute;
 import libdominator.dom.node.node;
 import libdominator.dom.node.parentnode;
 import libdominator.dom.nodetree.nodelist;
+import libdominator.types;
+
 
 class Element : Node, ParentNode {
   mixin ParentNodeMixin;
   mixin NodeImpl;
 
-  public Attribute[] attributes;
+  Attr[DOMString] attributes;
 
-  this(string tag) {
-    import std.algorithm.searching : findSplit;
-    if(auto result = tag.findSplit(":"))
+  this() {}
+
+  this(DOMString name) {
+    if(auto result = name.findSplit(":"))
     {
       this._prefix = result[0];
       this._localName = result[2];
@@ -23,81 +28,192 @@ class Element : Node, ParentNode {
     else
     {
       this._prefix = "";
-      this._localName = tag;
+      this._localName = name;
     }
   }
 
-  // TODO readonly attribute DOMString? namespaceURI; //https://dom.spec.whatwg.org/#dom-element-namespaceuri
-
-  private string _prefix;
-  public string prefix() {
+  private DOMString _prefix;
+  DOMString prefix() {
     //https://dom.spec.whatwg.org/#dom-element-prefix
     return this._prefix;
   }
 
-  private string _localName;
-  public string localName() {
+  private DOMString _localName;
+  DOMString localName() {
     //https://dom.spec.whatwg.org/#dom-element-localname
     return this._localName;
   }
 
-  public string tagName() {
+  DOMString tagName() {
     import std.string : toUpper;
     //https://dom.spec.whatwg.org/#dom-element-tagname
     return this.nodeName().toUpper();
   }
 
-  // TODO [CEReactions] attribute DOMString id;
-  // TODO [CEReactions] attribute DOMString className;
-  // TODO [SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
-  // TODO [CEReactions, Unscopable] attribute DOMString slot;
+  // TODO
+  private DOMString _namespaceURI;
+  DOMString namespaceURI() {
+    return this._namespaceURI;
+  }
 
-  final public bool hasAttributes() {
-    // https://dom.spec.whatwg.org/#dom-element-hasattributes
+  @property DOMString id(DOMString id) {
+    this.setAttribute("id", id);
+    return id;
+  };
+  @property DOMString id() {
+    return this.getAttribute("id");
+  };
+
+  @property DOMString className(DOMString _class) {
+    this.setAttribute("class", _class);
+    return _class;
+  }
+  @property DOMString className() {
+    return this.getAttribute("class");
+  };
+
+  DOMTokenList classList() {
+    import std.algorithm.iteration : splitter,filter;
+    import std.array;
+    
+    auto className = this.className();
+    if( ! className ) {
+      return [];
+    }
+
+    return className.splitter(' ').filter!(i => i.length).array;
+  }
+
+  @property DOMString slot(DOMString slot) {
+    this.setAttribute("slot", slot);
+    return slot;
+  }
+  @property DOMString slot() {
+    return this.getAttribute("slot");
+  };
+
+  // https://dom.spec.whatwg.org/#dom-element-hasattributes
+  bool hasAttributes() {
     return this.attributes.length ? true : false;
   }
 
-  final public Attribute[] getAttributes() {
-    // https://dom.spec.whatwg.org/#dom-element-attributes
-    return this.attributes;
+  // https://dom.spec.whatwg.org/#dom-element-attributes
+  Attr[] getAttributes() {
+    return this.attributes.values;
   }
 
-  // TODO sequence<DOMString> getAttributeNames(); //https://dom.spec.whatwg.org/#dom-element-getattributenames
-
-  final public string getAttribute(string attributeName) {
-    // https://dom.spec.whatwg.org/#dom-element-getattribute
-    import std.algorithm.iteration : filter;
-
-    auto r = this.attributes.filter!(a => a.name == attributeName);
-    return r.empty ? "" : r.front.value;
+  // https://dom.spec.whatwg.org/#dom-element-getattributenames
+  DOMString[] getAttributeNames() {
+    return this.attributes.keys;
   }
 
-  // TODO DOMString? getAttributeNS(DOMString? namespace, DOMString localName); //https://dom.spec.whatwg.org/#dom-element-getattributens
-
-  final public auto setAttribute(Attribute attribute) {
-    // https://dom.spec.whatwg.org/#dom-element-setattribute
-    import std.algorithm.searching : countUntil;
-    ptrdiff_t attr_index = this.attributes.countUntil!(a => a.name() == attribute.name());
-    if(attr_index == -1) {
-      this.attributes ~= attribute;
+  // https://dom.spec.whatwg.org/#dom-element-getattribute
+  DOMString getAttribute(DOMString qualifiedName) {
+    if( auto attr = this.getAttributeNode(qualifiedName) ) {
+      return attr.value;
     }
-    else {
-      this.attributes[attr_index] = attribute;
-    }
-    return this;
+    return "";
   }
 
-  // TODO [CEReactions] undefined setAttributeNS(DOMString? namespace, DOMString qualifiedName, DOMString value);
-  // TODO [CEReactions] undefined removeAttribute(DOMString qualifiedName);
-  // TODO [CEReactions] undefined removeAttributeNS(DOMString? namespace, DOMString localName);
-  // TODO [CEReactions] boolean toggleAttribute(DOMString qualifiedName, optional boolean force);
-  // TODO boolean hasAttribute(DOMString qualifiedName);
-  // TODO boolean hasAttributeNS(DOMString? namespace, DOMString localName);
-  // TODO Attr? getAttributeNode(DOMString qualifiedName);
-  // TODO Attr? getAttributeNodeNS(DOMString? namespace, DOMString localName);
-  // TODO [CEReactions] Attr? setAttributeNode(Attr attr);
-  // TODO [CEReactions] Attr? setAttributeNodeNS(Attr attr);
-  // TODO [CEReactions] Attr removeAttributeNode(Attr attr);
+ //https://dom.spec.whatwg.org/#dom-element-getattributens
+ DOMString getAttributeNS(DOMString namespace, DOMString localName) {
+  auto attr = namespace 
+      ? this.getAttributeNode(namespace~":"~localName)
+      : this.getAttributeNode(localName);
+
+  return attr is null
+    ? ""
+    : attr.value; 
+ }
+
+  void removeAttribute(DOMString qualifiedName){
+    if( this.hasAttribute(qualifiedName) ) {
+      this.attributes.remove(qualifiedName);
+    }
+  }
+
+  void removeAttributeNS(DOMString namespace, DOMString localName) {
+    if(namespace) {
+      this.removeAttribute(namespace~":"~localName);
+    } else {
+      this.removeAttribute(localName);
+    }
+  }
+
+  Attr removeAttributeNode(Attr attr) {
+    if( ! this.hasAttribute(attr.name())) {
+      throw new NotFoundError();
+    }
+    this.removeAttribute(attr.name());
+    return attr;
+  }
+  
+  bool toggleAttribute(DOMString qualifiedName, /* bool force */ ) {
+    if( this.hasAttribute(qualifiedName) ) {
+      this.removeAttribute(qualifiedName);
+      return false;
+    }
+
+    this.setAttribute(qualifiedName);
+    return true;
+  }
+
+  bool hasAttribute(DOMString qualifiedName) {
+    return this.getAttributeNode(qualifiedName) !is null;
+  }
+
+  bool hasAttributeNS(DOMString namespace, DOMString localName) {
+    return this.getAttributeNodeNS(namespace, localName) !is null;
+  }
+  Attr getAttributeNode(DOMString qualifiedName) {
+    if( auto attr = qualifiedName in this.attributes ) {
+      return (*attr);
+    }
+    return null;
+  }
+  Attr getAttributeNodeNS(DOMString namespace, DOMString localName) {
+    return namespace 
+      ? this.getAttributeNode(namespace~":"~localName)
+      : this.getAttributeNode(localName);
+  }
+
+  // https://dom.spec.whatwg.org/#concept-element-attributes-set
+  alias setAttributeNodeNS = setAttributeNode;
+  Attr setAttributeNode(Attr attr) {
+    // If attr’s element is neither null nor element, throw an "InUseAttributeError" DOMException.
+    if( attr.ownerElement !is null ) {
+      throw new InUseAttributeError();
+    }
+
+    // Let oldAttr be the result of getting an attribute given attr’s namespace, attr’s local name, and element.
+    auto oldAttr = this.getAttributeNodeNS(attr.prefix, attr.localName);
+
+    // If oldAttr is attr, return attr.
+    if( oldAttr == attr ) {
+      return attr;
+    }
+
+    // If oldAttr is non-null, then replace oldAttr with attr.
+    // Otherwise, append attr to element.
+    attr.ownerElement = this;
+    if ( oldAttr !is null ) {
+      oldAttr = attr;
+    } else {
+      this.attributes[attr.name()] = attr;
+    }
+
+    return attr;
+  }
+
+  void setAttributeNS(DOMString namespace, DOMString qualifiedName, DOMString value="") {
+    return namespace 
+      ? this.setAttribute(namespace~":"~localName, value)
+      : this.setAttribute(localName, value);
+  }
+  void setAttribute(DOMString qualifiedName, DOMString value="") {
+    this.setAttributeNode( new Attr(qualifiedName, value) );
+  }
+
   // TODO ShadowRoot attachShadow(ShadowRootInit init);
   // TODO readonly attribute ShadowRoot? shadowRoot;
   // TODO Element? closest(DOMString selectors);
@@ -114,10 +230,10 @@ class Element : Node, ParentNode {
   *
   * It is an element from HTML, SVG, or MathML that cannot have any child nodes (i.e., nested elements or text nodes).
   */
-  @property public bool empty_element()
+  @property bool empty_element()
   { return this._empty_element; }
   ///ditto
-  @property public bool empty_element(bool value)
+  @property bool empty_element(bool value)
   { return this._empty_element = value; }
 
   /**
@@ -126,16 +242,16 @@ class Element : Node, ParentNode {
   * See_Also:
   *   https://developer.mozilla.org/en-US/docs/Web/API/Element/outerHTML
   */
-  public string outerHTML() {
+  string outerHTML() {
     return this.toString();
   }
 
-  override public string toString() {
+  override string toString() {
     import std.algorithm : map;
     import std.array : join , array;
     return
     "<" ~ this.nodeName
-    ~ ( this.attributes.length ? " " ~ this.attributes.map!(a => a.toString() ).array().join(' ') : "" )
+    ~ ( this.attributes.length ? " " ~ this.attributes.values.map!(a => a.toString() ).array().join(' ') : "" )
     ~ ">"
     ~ this.childNodes().map!(n => n.toString() ).array().join()
     ~ ( this.empty_element ? "" : "</" ~ this.nodeName ~ ">" );
@@ -145,11 +261,11 @@ class Element : Node, ParentNode {
 
 private mixin template NodeImpl() {
 
-  override public ushort nodeType() {
+  override ushort nodeType() {
     return Node.ELEMENT_NODE;
   }
 
-  override public string nodeName() {
+  override string nodeName() {
     import std.uni : toUpper, sicmp;
     auto nodeName = this._prefix.length ? this._prefix ~ ":" ~ this._localName : this._localName;
     return this.isConnected() && ownerDocument.doctype !is null && 0 == sicmp(ownerDocument.doctype.nodeName() , "html")
@@ -157,15 +273,15 @@ private mixin template NodeImpl() {
       : nodeName;
   }
 
-  override @property public string nodeValue() {
+  override @property string nodeValue() {
     return null;
   }
 
-  override @property public string nodeValue(string value){
+  override @property string nodeValue(string value){
     return null;
   }
 
-  override public string textContent() {
+  override string textContent() {
       import std.algorithm : map , filter;
       import std.array : join , array;
       return this.childNodes().map!(n => n.textContent()).array().join(" ");

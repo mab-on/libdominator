@@ -35,7 +35,6 @@ unittest
 	xPath.steps ~= LocationStep( Axis.child , new Element("tag") );
 	xPath.steps ~= LocationStep( Axis.child , new Element("sub") );
 	xPath.steps ~= LocationStep( Axis.following , new Element("p") );
-	writeln(xPath.expression());
 
 	Nodeset hits = doc.documentElement.evaluate(xPath);
 	assert( hits.length == 2 , format!"unexpected %d"(hits.length));
@@ -52,11 +51,17 @@ unittest
 	Element p_ba_element = cast(Element)p_ba;
 	assert( p_ba_element );
 
-	p_ba_element.insertBefore( (new Element("a")).setAttribute( Attribute("href","#first") ) , p_ba_element.firstChild );
-	p_ba_element.appendChild( (new Element("a")).setAttribute( Attribute("href","#last") ) );
+	Element firstChild = new Element("a");
+	firstChild.setAttributeNode( new Attr("href","#first") );
+
+	Element lastChild = new Element("a");
+	lastChild.setAttribute("href","#last");
+
+	p_ba_element.insertBefore( firstChild , p_ba_element.firstChild );
+	p_ba_element.appendChild( lastChild );
 
 	Element child = cast(Element)p_ba_element.firstChild;
-	assert( child && child.getAttribute("href") == "#first" );
+	assert(child.getAttribute("href") == "#first");
 
 	child = cast(Element)p_ba_element.lastChild;
 	assert( child && child.getAttribute("href") == "#last" );
@@ -71,7 +76,7 @@ unittest
 	Node doc = readText( dirName(__FILE_FULL_PATH__)~"/dummy.html" ).parse();
 
 	auto test_node = new Element("li");
-	test_node.attributes ~=  Attribute("id" , "li-1-o2-1") ;
+	test_node.setAttribute("id" , "li-1-o2-1") ;
 
 	LocationPath xPath;
 	xPath.steps ~= LocationStep( Axis.descendant_or_self , test_node ); /* //li[@id="li-1-o2-1"]/ */

@@ -12,3 +12,12 @@ class InvalidModificationError : DOMException
 {
 	this() { super( "The object can not be modified in this way."  , 13 ); }
 }
+
+class InUseAttributeError : DOMException {
+	this() { super( "The attribute is in use."  , 10 ); }
+}
+
+/// https://heycam.github.io/webidl/#notfounderror
+class NotFoundError : DOMException {
+	this() { super( "The object can not be found here."  , 8 ); }
+}
