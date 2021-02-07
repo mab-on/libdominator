@@ -1,5 +1,6 @@
 module test.dom.node.element;
 
+import std.format;
 import libdominator.dom;
 
 unittest
@@ -94,4 +95,18 @@ unittest {
 
   div.removeAttribute("bla");  
   assert( ! div.hasAttributes());
+}
+
+unittest {
+  auto body = new Element("body");
+  body.
+    appendChild( new Element("div") ).
+      appendChild( new Element("p") );
+  body.appendChild(new Element("p"));
+
+  assert( 
+    body.getElementsByTagName("p").length == 2 ,
+    format!"unexpected '%d'"(body.getElementsByTagName("p").length)
+  );
+
 }

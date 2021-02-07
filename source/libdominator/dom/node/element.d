@@ -3,12 +3,9 @@ module libdominator.dom.node.element;
 import std.algorithm.searching : findSplit;
 import std.typecons;
 
-import libdominator.dom.errors;
-import libdominator.dom.node.attribute;
-import libdominator.dom.node.node;
-import libdominator.dom.node.parentnode;
-import libdominator.dom.nodetree.nodelist;
+import libdominator.dom;
 import libdominator.types;
+import libdominator.xpath;
 
 
 class Element : Node, ParentNode {
@@ -218,7 +215,14 @@ class Element : Node, ParentNode {
   // TODO readonly attribute ShadowRoot? shadowRoot;
   // TODO Element? closest(DOMString selectors);
   // TODO boolean matches(DOMString selectors);
-  // TODO HTMLCollection getElementsByTagName(DOMString qualifiedName);
+
+  HTMLCollection getElementsByTagName(DOMString qualifiedName) {
+    return new HTMLCollection( cast(Element[])this.evaluate(
+        LocationPath(
+          [LocationStep( Axis.descendant_or_self , new Element(qualifiedName) )]
+        )
+    ));
+  }
   // TODO HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
   // TODO HTMLCollection getElementsByClassName(DOMString classNames);
 

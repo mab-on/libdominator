@@ -18,6 +18,8 @@ class Document : Node, ParentNode {
 	mixin ParentNodeMixin;
 	mixin SpecImpl;
 
+	EncodingScheme encoding;
+
 	public this() {
 		this.encoding = new EncodingSchemeUtf8();
 	}
@@ -65,21 +67,30 @@ private mixin template NodeImpl() {
 private mixin template SpecImpl() {
 	import libdominator.types;
 
-	DOMString contentType = "application/xml";
+
+	// TODO [SameObject] readonly attribute DOMImplementation implementation; // https://dom.spec.whatwg.org/#domimplementation
 	USVString URL = "about:blank";
 	USVString documentURI = "";
 	DOMString compatMode = "no-quirks";
-	EncodingScheme encoding;
+	@property USVString characterSet() { return this.encoding.toString(); }
+	@property USVString charset() { return this.characterSet; }
+	@property USVString inputEncoding() { return this.characterSet; }
+	DOMString contentType = "application/xml";
+
 	DocumentType doctype;
 	Element documentElement;
-
-	// TODO [SameObject] readonly attribute DOMImplementation implementation; // https://dom.spec.whatwg.org/#domimplementation
-
-	public USVString characterSet() { return this.encoding.toString(); }
-	public USVString charset() { return this.characterSet(); }
-	public USVString inputEncoding() { return this.characterSet(); }
-
-	// TODO HTMLCollection getElementsByTagName(DOMString qualifiedName);
+	
+	HTMLCollection getElementsByTagName(DOMString qualifiedName) {
+		return this.documentElement.getElementsByTagName(qualifiedName);
+	}
 	// TODO HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
 	// TODO HTMLCollection getElementsByClassName(DOMString classNames);
+
+	// TODO [CEReactions, NewObject] Element createElement(DOMString localName, optional (DOMString or ElementCreationOptions) options = {});
+	// TODO [CEReactions, NewObject] Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional (DOMString or ElementCreationOptions) options= {});
+  	// TODO [NewObject] DocumentFragment createDocumentFragment();
+	// TODO [NewObject] Text createTextNode(DOMString data);
+	// TODO [NewObject] CDATASection createCDATASection(DOMString data);
+	// TODO [NewObject] Comment createComment(DOMString data);
+	// TODO [NewObject] ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
 }

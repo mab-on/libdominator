@@ -8,6 +8,11 @@ class HTMLCollection {
 	Element[] _elements;
 	alias _elements this;
 
+	this() {}
+	this(Element[] elements) {
+		this._elements = elements;
+	}
+
 	size_t length() {
 		return this._elements.length;
 	}
