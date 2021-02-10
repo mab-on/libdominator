@@ -119,8 +119,18 @@ size_t filter(NodeList context_nodes, Axis axis  , out Nodeset output ) {
 				}
 				break;
 
-			//TODO
 			case Axis.attribute:
+				if (context_node.nodeType() != Node.ELEMENT_NODE) {
+					break;
+				}
+				if( Element element = cast(Element) context_node) {
+					foreach(attr ; element.attributes.values) {
+						output ~= attr;
+					}
+				}
+				break;
+
+			//TODO
 			case Axis.namespace:
 				break;
 		}

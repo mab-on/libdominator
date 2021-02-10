@@ -108,5 +108,19 @@ unittest {
     body.getElementsByTagName("p").length == 2 ,
     format!"unexpected '%d'"(body.getElementsByTagName("p").length)
   );
+}
+
+unittest {
+  auto body = new Element("body");
+  auto wanted = new Element("p");
+
+  wanted.setAttribute("class","wanted");
+  body.
+    appendChild( new Element("div") ).
+      appendChild( wanted );
+  body.appendChild(new Element("p"));
+
+  assert(body.getElementsByClassName("wanted").length == 1);
+  assert(body.getElementsByClassName("wanted")[0].tagName() == "P");
 
 }

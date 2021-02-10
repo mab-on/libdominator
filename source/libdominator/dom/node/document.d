@@ -83,7 +83,9 @@ private mixin template SpecImpl() {
 	HTMLCollection getElementsByTagName(DOMString qualifiedName) {
 		return this.documentElement.getElementsByTagName(qualifiedName);
 	}
-	// TODO HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
+	HTMLCollection getElementsByTagNameNS(DOMString namespace, DOMString localName) {
+		return this.documentElement.getElementsByTagNameNS(namespace,localName);
+	}
 	// TODO HTMLCollection getElementsByClassName(DOMString classNames);
 
 	// TODO [CEReactions, NewObject] Element createElement(DOMString localName, optional (DOMString or ElementCreationOptions) options = {});

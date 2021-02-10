@@ -8,12 +8,12 @@ import std.stdio;
 unittest
 {
     auto probe = `<tag key=value fasel ding=dang\ dong >text</tag>`.parse();
-    assert(probe.documentElement.getAttributes().length == 3, format!"unexpected '%d'"(probe.documentElement.getAttributes().length));
+    assert(probe.documentElement.attributes.length == 3, format!"unexpected '%d'"(probe.documentElement.attributes.length));
     assert(probe.toString()
         == `<tag key=value fasel ding=dang\ dong>text</tag>`,
         format!"unexpected '%s'"(probe.toString()));
 
-    auto attribs = `<tag key=value single='quotes' double="quotes" >text</tag>`.parse().documentElement.getAttributes();
+    auto attribs = `<tag key=value single='quotes' double="quotes" >text</tag>`.parse().documentElement.attributes.values;
     assert(attribs[0].name == "key" && attribs[0].value == "value" && attribs[0]._wrapper == 0x00);
     assert(attribs[1].name == "single" && attribs[1].value == "quotes" && attribs[1]._wrapper == '\'');
     assert(attribs[2].name == "double" && attribs[2].value == "quotes" && attribs[2]._wrapper == '"');

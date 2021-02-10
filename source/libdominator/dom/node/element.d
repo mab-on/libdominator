@@ -12,6 +12,10 @@ class Element : Node, ParentNode {
   mixin ParentNodeMixin;
   mixin NodeImpl;
 
+  /*
+  * https://dom.spec.whatwg.org/#dom-element-attributes
+  * TODO: implement NamedNodeMap
+  */
   Attr[DOMString] attributes;
 
   this() {}
@@ -89,14 +93,11 @@ class Element : Node, ParentNode {
     return this.getAttribute("slot");
   };
 
+  // TODO [SameObject] readonly attribute NamedNodeMap attributes;
+
   // https://dom.spec.whatwg.org/#dom-element-hasattributes
   bool hasAttributes() {
     return this.attributes.length ? true : false;
-  }
-
-  // https://dom.spec.whatwg.org/#dom-element-attributes
-  Attr[] getAttributes() {
-    return this.attributes.values;
   }
 
   // https://dom.spec.whatwg.org/#dom-element-getattributenames
@@ -223,8 +224,26 @@ class Element : Node, ParentNode {
         )
     ));
   }
-  // TODO HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
-  // TODO HTMLCollection getElementsByClassName(DOMString classNames);
+
+  HTMLCollection getElementsByTagNameNS(DOMString namespace, DOMString localName) {
+    return this.getElementsByTagName(
+      namespace
+        ? namespace~":"~localName
+        : localName
+    );
+  }
+
+  // https://dom.spec.whatwg.org/#dom-element-getelementsbyclassname
+  // TODO: match classnames by whitespace seperated values
+  HTMLCollection getElementsByClassName(DOMString classNames) {
+    Element testnode = new Element("*");
+    testnode.setAttribute("class", classNames);
+    return new HTMLCollection( cast(Element[])this.evaluate(
+        LocationPath(
+          [LocationStep( Axis.descendant_or_self , testnode )]
+        )
+    ));    
+  }
 
   // --------------------- Interface Spec END  ---------------------
 

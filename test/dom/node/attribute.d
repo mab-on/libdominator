@@ -43,6 +43,6 @@ unittest {
 	import libdominator.dom.parser;
 
 	auto doc = `<tmp the-key="the-value"></tmp>`.parse();
-	auto attr = doc.documentElement.getAttributes();
+	auto attr = doc.documentElement.attributes.values;
 	assert(doc.documentElement == attr[0].ownerElement);
 }

@@ -1,5 +1,7 @@
 module libdominator.xpath.locationpath.step.filter;
 
+static import std.format;
+
 import AxisFilter = libdominator.xpath.locationpath.axis.filter;
 import libdominator.dom.node;
 import libdominator.dom.nodetree.nodelist;
@@ -20,60 +22,71 @@ size_t filter(NodeList context_nodes, LocationStep step, out Nodeset output )
 	}
 
 	foreach(Node axisNode ; axisHits) {
-
-		if( cmp(axisNode, step.nodeTest) ) {
+		if( test(axisNode, step.nodeTest) ) {
 			output ~= axisNode;
 		}
 	}
 	return output.length;
 }
 
-private bool cmp(Node context , Node test) {
-	import std.uni : icmp;
+private bool test(Node context , Node test) {
 
-	if( typeid(context) != typeid(test) ) {
+	if( context.nodeType() != test.nodeType() ) {
 		return false;
 	}
 
-	if(0 != icmp( context.nodeName , test.nodeName )) {
-		return false;
-	}
+	switch(test.nodeType()) {
 
-	if( typeid(test) == typeid(Element) ) {
-		return cmpElement(cast(Element)context, cast(Element)test);
-	}
+		case Node.ELEMENT_NODE:
+			return testElement(cast(Element)context, cast(Element)test);
 
-	if( typeid(test) == typeid(Document) ) {
-		throw new XPathException("Hmmm....");
-		//return return cmp(context, test);
-	}
+		case Node.ATTRIBUTE_NODE:
+			return testAttribute(cast(Attr)context, cast(Attr)test);
 
-	return true;
+		default: throw new XPathException(std.format.format!"dont know how to handle nodeType %s"(test.nodeType()));
+	}
 }
 
-private bool cmpElement(Element context , Element test) {
+private bool testElement(Element context , Element test) {
+
+	if(
+		test.nodeName() != "*"
+		&& context.nodeName() != test.nodeName()
+	) {
+		return false;
+	}
 
 	if( ! test.hasAttributes() ) {
 		return true;
 	}
 
-	bool hitHook;
-	foreach( test_attr ; test.getAttributes() )
+	foreach( test_attr ; test.attributes.values )
 	{
-		hitHook = false;
-		foreach( context_attr ; context.getAttributes() )
-		{
-			if
-			(
-				test_attr.name == context_attr.name
-				&& ( test_attr.value.length ? test_attr.value == context_attr.value : true)
-			)
-			{
-				hitHook = true;
-				break;
-			}
+		if( ! context.hasAttribute(test_attr.name())) {
+			return false;
 		}
-		if( ! hitHook ) return false;
+
+		if( ! testAttribute(context.getAttributeNode(test_attr.name()), test_attr)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+private bool testAttribute(Attr context, Attr test) {
+	if(
+		test.name() != "*"
+		&& test.name() != context.name()
+	) {
+		return false;
+	}
+
+	if(
+		test.value
+		&& test.value != context.value
+	) {
+		return false;
 	}
 
 	return true;
