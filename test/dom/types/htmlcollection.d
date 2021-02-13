@@ -1,6 +1,5 @@
 module test.dom.types.htmlcollection;
 
-
 import libdominator.dom;
 import libdominator.types;
 

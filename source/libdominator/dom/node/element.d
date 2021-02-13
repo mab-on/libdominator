@@ -18,7 +18,7 @@ class Element : Node, ParentNode {
   */
   Attr[DOMString] attributes;
 
-  this() {}
+  DOMTokenList classList;
 
   this(DOMString name) {
     if(auto result = name.findSplit(":"))
@@ -31,6 +31,8 @@ class Element : Node, ParentNode {
       this._prefix = "";
       this._localName = name;
     }
+
+    this.classList = new DOMTokenList(this, "class");
   }
 
   private DOMString _prefix;
@@ -65,25 +67,12 @@ class Element : Node, ParentNode {
     return this.getAttribute("id");
   };
 
-  @property DOMString className(DOMString _class) {
-    this.setAttribute("class", _class);
-    return _class;
+  @property DOMString className(DOMString classname) {
+    return this.classList.value(classname);
   }
   @property DOMString className() {
-    return this.getAttribute("class");
+    return this.classList.value();
   };
-
-  DOMTokenList classList() {
-    import std.algorithm.iteration : splitter,filter;
-    import std.array;
-    
-    auto className = this.className();
-    if( ! className ) {
-      return [];
-    }
-
-    return className.splitter(' ').filter!(i => i.length).array;
-  }
 
   @property DOMString slot(DOMString slot) {
     this.setAttribute("slot", slot);

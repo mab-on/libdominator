@@ -11,7 +11,7 @@ class Attr : Node {
 
 	char _wrapper;
 
-	this(string name, string value , char wrapper='"' ) {
+	this(DOMString name, DOMString value="" , char wrapper='"' ) {
 		import std.algorithm.searching : findSplit;
 
 		if(auto result = name.findSplit(":")) {

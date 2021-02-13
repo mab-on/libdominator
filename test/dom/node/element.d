@@ -82,7 +82,7 @@ unittest {
   assert(div.classList.length == 1);
 
   div.className = "test 12  123";
-  assert(div.className == "test 12  123");
+  assert(div.className == "test 12 123");
   assert(div.classList.length == 3);
 }
 

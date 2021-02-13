@@ -21,3 +21,11 @@ class InUseAttributeError : DOMException {
 class NotFoundError : DOMException {
 	this() { super( "The object can not be found here."  , 8 ); }
 }
+
+class SyntaxError : DOMException {
+	this() { super( "The string did not match the expected pattern."  , 12 ); }
+}
+
+class InvalidCharacterError : DOMException {
+	this() { super( "The string contains invalid characters." , 5 ); }
+}
