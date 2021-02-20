@@ -37,4 +37,17 @@
 //	  import std.array : join , array;
 //	  return this.childNodes().map!(n => n.textContent()).array().join(" ");
 //	}
+
+//	override DOMString lookupPrefix(DOMString namespace) {
+//			return null;
+//		}
+
+//	override DOMString lookupNamespaceURI(DOMString prefix) {
+//		return null;
+//	}
+//
+//	override bool isDefaultNamespace(DOMString namespace) {
+//		return null;
+//	}
+
 //}

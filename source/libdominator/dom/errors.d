@@ -29,3 +29,7 @@ class SyntaxError : DOMException {
 class InvalidCharacterError : DOMException {
 	this() { super( "The string contains invalid characters." , 5 ); }
 }
+
+class NamespaceError : DOMException {
+	this() { super( "The operation is not allowed by Namespaces in XML." , 14 ); }
+}

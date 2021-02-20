@@ -23,40 +23,45 @@ class Element : Node, ParentNode {
   this(DOMString name) {
     if(auto result = name.findSplit(":"))
     {
-      this._prefix = result[0];
-      this._localName = result[2];
+      this.prefix = result[0];
+      this.localName = result[2];
     }
     else
     {
-      this._prefix = "";
-      this._localName = name;
+      this.prefix = "";
+      this.localName = name;
     }
 
     this.classList = new DOMTokenList(this, "class");
   }
 
-  private DOMString _prefix;
-  DOMString prefix() {
-    //https://dom.spec.whatwg.org/#dom-element-prefix
-    return this._prefix;
+  // https://dom.spec.whatwg.org/#concept-create-element
+  this(
+    Document document,
+    DOMString localName, 
+    DOMString namespace,
+    DOMString prefix=""
+    // TODO DOMString is
+    // TODO synchronous custom elements flag
+  ) {
+    if( ! prefix.length ) {
+      prefix = null;
+    }
+
+    this.namespaceURI = namespace;
+    this.prefix = prefix;
+    this.localName = localName;
+    this.ownerDocument = Document;
   }
 
-  private DOMString _localName;
-  DOMString localName() {
-    //https://dom.spec.whatwg.org/#dom-element-localname
-    return this._localName;
-  }
-
+  DOMString namespaceURI;
+  DOMString prefix;
+  DOMString localName;
+  
   DOMString tagName() {
     import std.string : toUpper;
     //https://dom.spec.whatwg.org/#dom-element-tagname
     return this.nodeName().toUpper();
-  }
-
-  // TODO
-  private DOMString _namespaceURI;
-  DOMString namespaceURI() {
-    return this._namespaceURI;
   }
 
   @property DOMString id(DOMString id) {
@@ -268,7 +273,6 @@ class Element : Node, ParentNode {
     ~ this.childNodes().map!(n => n.toString() ).array().join()
     ~ ( this.empty_element ? "" : "</" ~ this.nodeName ~ ">" );
   }
-
 }
 
 private mixin template NodeImpl() {
@@ -279,7 +283,7 @@ private mixin template NodeImpl() {
 
   override string nodeName() {
     import std.uni : toUpper, sicmp;
-    auto nodeName = this._prefix.length ? this._prefix ~ ":" ~ this._localName : this._localName;
+    auto nodeName = this.prefix.length ? this.prefix ~ ":" ~ this.localName : this.localName;
     return this.isConnected() && ownerDocument.doctype !is null && 0 == sicmp(ownerDocument.doctype.nodeName() , "html")
       ? toUpper(nodeName)
       : nodeName;
@@ -297,5 +301,78 @@ private mixin template NodeImpl() {
       import std.algorithm : map , filter;
       import std.array : join , array;
       return this.childNodes().map!(n => n.textContent()).array().join(" ");
+  }
+
+  // https://dom.spec.whatwg.org/#dom-node-lookupprefix
+  override DOMString lookupPrefix(DOMString namespace) {
+    if( ! namespace.length ) return null;
+
+    if( this.namespaceURI == namespace ) {
+      if( this.prefix.length ) return this.prefix;
+    }
+
+    foreach( attr; this.attributes ) {
+      if( attr.prefix == "xmlns" && attr.value == namespace ) {
+        return attr.localName;
+      }
+    }
+
+    auto parent = this.parentElement();
+    if( parent !is null ) {
+      return parent.lookupPrefix(namespace);
+    }
+
+    return null;
+  }
+
+  // https://dom.spec.whatwg.org/#dom-node-lookupnamespaceuri
+  override DOMString lookupNamespaceURI(DOMString prefix) {
+    if( ! prefix.length ) {
+      prefix = null;
+    }
+
+    if( this.namespaceURI.length && this.prefix == prefix ) {
+      return this.namespaceURI;
+    }
+
+    foreach( attr; this.attributes ) {
+      
+      if( 
+        attr.namespaceURI == Namespace.XMLNS 
+        && attr.prefix == "xmlns"
+        && attr.localName == prefix
+        && attr.value.length
+      ) {
+        return attr.value;
+      }
+
+      if( 
+        !prefix.length && !attr.prefix.length
+        && attr.namespaceURI == Namespace.XMLNS
+        && attr.localName == "xmlns"
+        && attr.value.length
+      ) {
+        return attr.value;
+      }
+
+    }
+
+    auto parent = this.parentElement();
+    if( parent !is null ) {
+      return parent.lookupNamespaceURI(prefix);
+    }    
+
+    return null;
+  }
+
+  //https://dom.spec.whatwg.org/#dom-node-isdefaultnamespace
+  override bool isDefaultNamespace(DOMString namespace) {
+    if( ! namespace.length ) {
+      namespace = null;
+    }
+    
+    auto defaultNamespace = this.lookupNamespaceURI(null);
+
+    return defaultNamespace == namespace; 
   }
 }

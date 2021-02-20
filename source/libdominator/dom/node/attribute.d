@@ -57,6 +57,24 @@ class Attr : Node {
 	  		: ""
 	  		);
   }
+
+  override DOMString lookupPrefix(DOMString namespace) {
+		return this.ownerElement is null
+			? null
+			: this.ownerElement.lookupPrefix(namespace);
+	}
+
+	override DOMString lookupNamespaceURI(DOMString prefix) {
+		return this.ownerElement is null
+			? null
+			: this.ownerElement.lookupNamespaceURI(prefix);	
+	}
+
+	override bool isDefaultNamespace(DOMString namespace) {
+		return this.ownerElement is null
+			? null
+			: this.ownerElement.isDefaultNamespace(namespace);	
+	}
 }
 
 private mixin template NodeImpl() {

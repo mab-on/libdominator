@@ -1,3 +1,3 @@
 module libdominator.types.domstring;
 
-alias DOMString = string;
+alias DOMString = wstring;

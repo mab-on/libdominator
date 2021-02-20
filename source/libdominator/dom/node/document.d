@@ -62,6 +62,24 @@ private mixin template NodeImpl() {
 			this.documentElement
 		].filter!(node => node !is null).array();
 	}
+
+	override DOMString lookupPrefix(DOMString namespace) {
+		return this.documentElement is null
+			? null
+			: this.documentElement.lookupPrefix(namespace);
+	}
+
+	override DOMString lookupNamespaceURI(DOMString prefix) {
+		return this.documentElement is null
+			? null
+			: this.documentElement.lookupNamespaceURI(prefix);	
+	}
+
+	override bool isDefaultNamespace(DOMString namespace) {
+		return this.documentElement is null
+			? null
+			: this.documentElement.isDefaultNamespace(namespace);	
+	}
 }
 
 private mixin template SpecImpl() {
@@ -89,7 +107,15 @@ private mixin template SpecImpl() {
 	// TODO HTMLCollection getElementsByClassName(DOMString classNames);
 
 	// TODO [CEReactions, NewObject] Element createElement(DOMString localName, optional (DOMString or ElementCreationOptions) options = {});
-	// TODO [CEReactions, NewObject] Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional (DOMString or ElementCreationOptions) options= {});
+	
+	Element createElementNS(
+		DOMString namespace, 
+		DOMString qualifiedName 
+		// TODO optional (DOMString or ElementCreationOptions) options= {}
+	) {
+		return internalCreateElementNS(this, namespace, qualifiedName);
+	}
+  	
   	// TODO [NewObject] DocumentFragment createDocumentFragment();
 	// TODO [NewObject] Text createTextNode(DOMString data);
 	// TODO [NewObject] CDATASection createCDATASection(DOMString data);

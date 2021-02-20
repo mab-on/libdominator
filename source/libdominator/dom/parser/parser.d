@@ -36,7 +36,7 @@ public Document parse(string haystack)
         while(needle < haystack.length && haystack[needle].isWhite) { needle++; }
         if(needle >= haystack.length) { return document; } //EOF
 
-        auto doctype = new DocumentType();
+        DocumentType doctype;
         needleProbe = tryDoctype(needle, haystack, doctype);
         if( needleProbe ) {
             document.doctype = doctype;
@@ -150,7 +150,7 @@ private size_t tryDoctype(size_t needle, ref string haystack, DocumentType docty
         while(needle < haystack.length && haystack[needle].isAlphaNum) { needle++; }
         if(needle >= haystack.length) { return 0; } //EOF
 
-        doctype.name = haystack[ iNeedle..needle ];
+        doctype = new DocumentType(haystack[ iNeedle..needle ], "", "");
 
         while(needle < haystack.length) {
             if(haystack[needle] == '<') return 0;

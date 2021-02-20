@@ -7,3 +7,4 @@ public import libdominator.dom.node.documenttype;
 public import libdominator.dom.node.element;
 public import libdominator.dom.node.node;
 public import libdominator.dom.node.parentnode;
+public import libdominator.dom.node.xmldocument;

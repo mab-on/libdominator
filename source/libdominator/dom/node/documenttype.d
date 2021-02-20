@@ -7,7 +7,7 @@ class DocumentType : Node {
 	mixin NodeImpl;
 	mixin SpecImpl;
 
-	public this() {
+	public this(DOMString qualifiedName, DOMString publicId, DOMString systemId) {
 		this.name = "";
 		this.publicId = "";
 		this.systemId = "";
@@ -49,6 +49,18 @@ private mixin template NodeImpl() {
 
 	override public string textContent() {
 	  return null;
+	}
+
+	override DOMString lookupPrefix(DOMString namespace) {
+		return null;
+	}
+
+	override DOMString lookupNamespaceURI(DOMString prefix) {
+		return null;
+	}
+
+	override bool isDefaultNamespace(DOMString namespace) {
+		return null;
 	}
 }
 

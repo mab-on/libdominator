@@ -3,6 +3,7 @@ module libdominator.dom.node.node;
 import libdominator.dom.node.document;
 import libdominator.dom.node.element;
 import libdominator.dom.nodetree.nodelist;
+import libdominator.types : DOMString;
 
 class Node
 {
@@ -118,9 +119,16 @@ class Node
 	// TODO boolean isSameNode(Node? otherNode); //https://dom.spec.whatwg.org/#dom-node-issamenode
 	// TODO unsigned short compareDocumentPosition(Node other); //https://dom.spec.whatwg.org/#dom-node-comparedocumentposition
 	// TODO boolean contains(Node? other); //https://dom.spec.whatwg.org/#dom-node-contains
-	// TODO DOMString? lookupPrefix(DOMString? namespace); //https://dom.spec.whatwg.org/#dom-node-lookupprefix
-	// TODO DOMString? lookupNamespaceURI(DOMString? prefix); //https://dom.spec.whatwg.org/#dom-node-lookupnamespaceuri
-	// TODO boolean isDefaultNamespace(DOMString? namespace); //https://dom.spec.whatwg.org/#dom-node-isdefaultnamespace
+
+	//https://dom.spec.whatwg.org/#dom-node-lookupprefix
+	// https://www.w3.org/TR/DOM-Level-3-Core/namespaces-algorithms.html#lookupNamespacePrefixAlgo
+	abstract DOMString lookupPrefix(DOMString namespace);
+
+	//https://dom.spec.whatwg.org/#dom-node-lookupnamespaceuri
+	abstract DOMString lookupNamespaceURI(DOMString prefix); 
+
+	//https://dom.spec.whatwg.org/#dom-node-isdefaultnamespace
+	abstract bool isDefaultNamespace(DOMString namespace);
 
 
 	public Node insertBefore(Node insert , Node refChild) {
@@ -217,4 +225,3 @@ class Node
 	}
 
 }
-
